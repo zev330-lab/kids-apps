@@ -605,7 +605,14 @@ function Ball() {
 }
 
 function Egg() {
-  return <Box x={-14} y={-18} w={28} h={36} fill="#f4f7ff" rx={10} />;
+  // An oval, matching Parker's shape lesson: "An oval is a stretched circle, like an egg."
+  return (
+    <g>
+      <ellipse cx={3} cy={4} rx={16} ry={22} fill="#0c1018" opacity={0.35} />
+      <ellipse cx={0} cy={0} rx={16} ry={22} fill="#f4f7ff" stroke="#12141c" strokeWidth={2} />
+      <ellipse cx={-6} cy={-10} rx={4} ry={7} fill="rgba(255,255,255,0.8)" />
+    </g>
+  );
 }
 
 function Leaf() {
