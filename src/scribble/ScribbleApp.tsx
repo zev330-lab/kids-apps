@@ -575,11 +575,11 @@ function Limb({ a, b, w }: { a: Point; b: Point; w: number }) {
       <path
         d={`M ${a.x} ${a.y} Q ${(a.x + b.x) / 2 - 12} ${(a.y + b.y) / 2} ${b.x} ${b.y}`}
         fill="none"
-        stroke="#ffb088"
+        stroke="#ff7a3c"
         strokeWidth={w}
-        strokeLinecap="round"
+        strokeLinecap="square"
       />
-      <circle cx={b.x} cy={b.y} r={w * 0.7} fill="#ffc2a8" />
+      <rect x={b.x - w * 0.7} y={b.y - w * 0.7} width={w * 1.4} height={w * 1.4} rx={3} fill="#ffb020" />
     </g>
   );
 }

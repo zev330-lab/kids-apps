@@ -1,6 +1,6 @@
 # Playtime
 
-Three gentle apps for a phone, a tablet, or an iPad in Split View. Nothing leaves the device. There are no accounts, no ads, and no third-party requests.
+Three gentle apps for a phone, a tablet, or an iPad in Split View. The look is an original blocky game style: chunky characters, dark panels, and pressable buttons. Nothing leaves the device. There are no accounts, no ads, and no third-party requests.
 
 - **Story Builder** is a choose-your-own-adventure with three worlds (Starlight Voyage, Whisperwood, and Coral Crown). Each world has more than ten scenes and at least four endings. Pictures are drawn in the app. A sticker book remembers endings in this browser, and the hero can be named. “Read to me” uses the device’s own speech.
 - **Scribble Friends** turns a finger drawing into a character with eyes, a mouth, arms, and legs. Kids can wiggle, bounce, or dance it, then add stickers and backgrounds. Save a PNG, share it with the device share sheet when that exists, or save a short movie (WebM/MP4 when the browser can record, otherwise a GIF). A gallery stays on the device.

@@ -133,17 +133,16 @@ function drawLimbs(ctx: CanvasRenderingContext2D, layout: FaceLayout, t: number)
 }
 
 function limb(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width: number) {
-  ctx.strokeStyle = "#ffb088";
+  ctx.strokeStyle = "#ff7a3c";
   ctx.lineWidth = width;
-  ctx.lineCap = "round";
+  ctx.lineCap = "square";
   ctx.beginPath();
   ctx.moveTo(x1, y1);
   ctx.quadraticCurveTo((x1 + x2) / 2 - 10, (y1 + y2) / 2, x2, y2);
   ctx.stroke();
-  ctx.fillStyle = "#ffc2a8";
-  ctx.beginPath();
-  ctx.arc(x2, y2, width * 0.7, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle = "#ffb020";
+  const hand = width * 1.3;
+  ctx.fillRect(x2 - hand / 2, y2 - hand / 2, hand, hand);
 }
 
 function drawFace(ctx: CanvasRenderingContext2D, layout: FaceLayout, t: number) {
@@ -166,21 +165,19 @@ function drawFace(ctx: CanvasRenderingContext2D, layout: FaceLayout, t: number) 
 }
 
 function eye(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, px: number, py: number) {
-  ctx.fillStyle = "#fff";
-  ctx.strokeStyle = "#243056";
+  const side = r * 2;
+  ctx.fillStyle = "#f4f7ff";
+  ctx.strokeStyle = "#12141c";
   ctx.lineWidth = Math.max(2, r * 0.14);
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.roundRect(x - r, y - r, side, side, 4);
   ctx.fill();
   ctx.stroke();
-  ctx.fillStyle = "#243056";
-  ctx.beginPath();
-  ctx.arc(x + px, y + py, r * 0.42, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#fff";
-  ctx.beginPath();
-  ctx.arc(x + px - r * 0.12, y + py - r * 0.12, r * 0.12, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle = "#12141c";
+  const pupil = r * 0.7;
+  ctx.fillRect(x - pupil / 2 + px, y - pupil / 2 + py, pupil, pupil);
+  ctx.fillStyle = "#7ef6ff";
+  ctx.fillRect(x - pupil / 2 + px, y - pupil / 2 + py, pupil * 0.35, pupil * 0.35);
 }
 
 function drawSparkles(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {

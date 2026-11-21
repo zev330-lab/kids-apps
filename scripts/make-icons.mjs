@@ -63,13 +63,36 @@ function coverCircle(px, py, cx, cy, r) {
   return (0.8 - d) / 1.6;
 }
 
+function coverRect(px, py, x, y, w, h) {
+  const inside = px >= x && px <= x + w && py >= y && py <= y + h;
+  if (!inside) {
+    const dx = Math.max(x - px, px - (x + w), 0);
+    const dy = Math.max(y - py, py - (y + h), 0);
+    const d = Math.hypot(dx, dy);
+    if (d >= 1) return 0;
+    return 1 - d;
+  }
+  const edge = Math.min(px - x, x + w - px, py - y, y + h - py);
+  return edge >= 1 ? 1 : Math.max(0.35, edge);
+}
+
 function paint(size) {
   const px = new Uint8Array(size * size * 4);
-  const bg = [255, 183, 3];
-  const face = [255, 246, 232];
-  const ink = [36, 48, 86];
-  const coral = [242, 92, 84];
-  const cheek = [255, 177, 166];
+  const bg = [18, 21, 31];
+  const head = [44, 56, 88];
+  const visor = [18, 50, 58];
+  const eye = [244, 247, 255];
+  const pupil = [18, 20, 28];
+  const lime = [214, 255, 74];
+  const blocks = [
+    [0.22, 0.2, 0.56, 0.5, head],
+    [0.28, 0.32, 0.44, 0.16, visor],
+    [0.32, 0.35, 0.12, 0.1, eye],
+    [0.56, 0.35, 0.12, 0.1, eye],
+    [0.34, 0.37, 0.05, 0.06, pupil],
+    [0.58, 0.37, 0.05, 0.06, pupil],
+    [0.62, 0.08, 0.2, 0.16, lime],
+  ];
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const i = (y * size + x) * 4;
@@ -79,30 +102,17 @@ function paint(size) {
       px[i + 3] = 255;
       const cx = x + 0.5;
       const cy = y + 0.5;
-      const faceA = coverCircle(cx, cy, size * 0.5, size * 0.54, size * 0.28);
-      if (faceA) blend(px, i, face[0], face[1], face[2], faceA * 255);
-      const cheekL = coverCircle(cx, cy, size * 0.38, size * 0.6, size * 0.045);
-      const cheekR = coverCircle(cx, cy, size * 0.62, size * 0.6, size * 0.045);
-      if (cheekL) blend(px, i, cheek[0], cheek[1], cheek[2], cheekL * 220);
-      if (cheekR) blend(px, i, cheek[0], cheek[1], cheek[2], cheekR * 220);
-      const eyeL = coverCircle(cx, cy, size * 0.41, size * 0.5, size * 0.035);
-      const eyeR = coverCircle(cx, cy, size * 0.59, size * 0.5, size * 0.035);
-      if (eyeL) blend(px, i, ink[0], ink[1], ink[2], eyeL * 255);
-      if (eyeR) blend(px, i, ink[0], ink[1], ink[2], eyeR * 255);
-      // Smile: pixels near a downward arc.
-      const sx = (cx - size * 0.5) / (size * 0.16);
-      if (Math.abs(sx) <= 1) {
-        const arcY = size * 0.6 + Math.cos(sx * 1.2) * size * 0.02 + sx * sx * size * 0.05;
-        const dist = Math.abs(cy - arcY);
-        const thick = size * 0.018;
-        if (dist < thick) {
-          const a = 1 - dist / thick;
-          blend(px, i, ink[0], ink[1], ink[2], a * 255);
-        }
+      for (const [rx, ry, rw, rh, color] of blocks) {
+        const a = coverRect(cx, cy, rx * size, ry * size, rw * size, rh * size);
+        if (a) blend(px, i, color[0], color[1], color[2], a * 255);
       }
-      // Star, top right.
-      const star = starCover(cx, cy, size * 0.74, size * 0.22, size * 0.09);
-      if (star) blend(px, i, coral[0], coral[1], coral[2], star * 255);
+      const sx = (cx - size * 0.5) / (size * 0.18);
+      if (Math.abs(sx) <= 1) {
+        const arcY = size * 0.7 - sx * sx * size * 0.08;
+        const dist = Math.abs(cy - arcY);
+        const thick = size * 0.02;
+        if (dist < thick) blend(px, i, lime[0], lime[1], lime[2], (1 - dist / thick) * 255);
+      }
     }
   }
   return px;

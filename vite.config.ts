@@ -18,8 +18,8 @@ export default defineConfig(({ mode }) => {
           short_name: "Playtime",
           description:
             "Stories, scribbles, and gentle practice. Offline, on this device only.",
-          theme_color: "#ffb703",
-          background_color: "#fff6e8",
+          theme_color: "#12151f",
+          background_color: "#12151f",
           display: "standalone",
           orientation: "any",
           start_url: "./",
