@@ -85,6 +85,38 @@ function Pal({
   );
 }
 
+function Hen() {
+  return (
+    <g stroke="#12141c" strokeWidth={2} strokeLinejoin="round">
+      <path d="M-12 16h6v18h-14v-5h8z M8 16h6v13h8v5H8z" fill="#f0a202" />
+      <path d="M-22 8l-17-15v-18l12 9v-10l15 16h18v-13h5v-9h20v28h-6v12l-10 12h-28z" fill="#fff1c9" />
+      <path d="M7 -32v-10h6v5h4v-8h6v8h6v7H7z" fill="#ed394c" />
+      <path d="M27 -13h8v10l-4 4-5-5z" fill="#ed394c" />
+      <path d="M29 -22l15 7-15 5z" fill="#ffad24" />
+      <rect x={19} y={-26} width={5} height={5} rx={1} fill="#12141c" />
+      <path d="M-21 -6h22v9l-8 7h-7z" fill="#e7c98f" />
+    </g>
+  );
+}
+
+function Pig() {
+  return (
+    <Pal color="#ff8ab0" ears="point">
+      <rect x={-14} y={-7} width={28} height={15} rx={5} fill="#f56c9a" stroke="#12141c" strokeWidth={2} />
+      <path d="M-9 -3h5v7h-5z M4 -3h5v7H4z" fill="#63243d" />
+    </Pal>
+  );
+}
+
+function Goat() {
+  return (
+    <Pal color="#efe6d6" ears="floppy">
+      <path d="M-20 -28l-3-16 8 6 3 10z M20 -28l3-16-8 6-3 10z" fill="#c49a66" stroke="#12141c" strokeWidth={2} />
+      <path d="M-8 7H8l-3 9-4-2-4 5z" fill="#fff4dc" stroke="#12141c" strokeWidth={2} />
+    </Pal>
+  );
+}
+
 function Rocket() {
   return (
     <g>
@@ -642,17 +674,17 @@ const MAP: Record<SpriteName, () => ReactNode> = {
   crayon: Crayon,
   blob: Blob,
   dog: () => <Pal color="#c68642" ears="floppy" />,
-  pig: () => <Pal color="#ff8ab0" ears="point" />,
+  pig: Pig,
   hat: Hat,
   bug: Bug,
   bed: Bed,
-  hen: () => <Pal color="#fff1c9" ears="none" />,
+  hen: Hen,
   pot: Pot,
   ball: Ball,
   egg: Egg,
   leaf: Leaf,
   nest: Nest,
-  goat: () => <Pal color="#efe6d6" ears="floppy" />,
+  goat: Goat,
   umbrella: Umbrella,
   igloo: Igloo,
   map: MapSprite,

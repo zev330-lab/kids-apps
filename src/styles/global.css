@@ -60,6 +60,9 @@ img, svg { max-width: 100%; }
 p { overflow-wrap: anywhere; }
 
 .skip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   position: absolute;
   left: 8px;
   top: 8px;
@@ -147,7 +150,11 @@ p { overflow-wrap: anywhere; }
 .btn-primary { background: linear-gradient(#ffe14a, #f0a202); color: #1a1408; border-bottom-color: #8a5a00; }
 .btn-mint { background: linear-gradient(#7ef6ff, #14b8d4); color: #062028; border-bottom-color: #08748a; }
 .btn-ghost { background: #e7eef8; color: #17233c; box-shadow: none; border: 2px solid #2c4264; border-bottom-width: 5px; }
-.btn.on, .tool.on, .tab.on { outline: 3px solid #f0b429; }
+.btn.on, .tool.on, .tab.on, .glow {
+  --selection-ring: 0 0 0 3px #ffe14a, 0 0 0 6px #513000;
+  --selection-width: 6px;
+}
+.btn.on, .tool.on, .tab.on { box-shadow: var(--selection-ring); }
 .btn.big, .big { min-height: calc(var(--tap) + 10px); font-size: 1.2em; }
 .wide { width: 100%; }
 button:active:not(:disabled) { transform: translateY(4px); border-bottom-width: 1px; }
@@ -163,7 +170,6 @@ button:disabled {
   border: 2px dashed #647895;
 }
 .sticker-btn:disabled svg { filter: grayscale(1); opacity: 0.65; }
-:focus-visible { outline: 3px solid #3ee0ff; outline-offset: 3px; }
 
 h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   font-family: var(--display);
@@ -383,7 +389,11 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   border-color: #fff;
   box-shadow: inset 0 0 0 2px rgba(36, 48, 86, 0.2), var(--shadow);
 }
-.swatch.on, .bg-swatch.on, .placed.on { outline: 3px solid var(--ink); }
+.swatch.on, .bg-swatch.on, .placed.on {
+  outline: 3px solid var(--ink);
+  --selection-ring: 0 0 0 3px var(--ink);
+  --selection-width: 3px;
+}
 .tool, .sticker-btn, .bg-swatch { font-family: var(--display); flex: none; }
 .tool, .sticker-btn { background: #f7f9fd; color: #17233c; }
 .sticker-dock { display: flex; flex-direction: column; gap: 8px; }
@@ -615,7 +625,15 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   font-family: var(--display);
 }
 .shape-btn svg { width: 100%; height: auto; }
-.glow { box-shadow: 0 0 0 4px #f0b429, 0 6px 0 #1c3358; }
+.glow { box-shadow: var(--selection-ring), 0 6px 0 #1c3358; }
+
+/* Keep keyboard focus visible outside any selection ring. */
+:focus-visible {
+  outline: 3px solid #12141c !important;
+  outline-offset: calc(var(--selection-width, 0px) + 3px);
+  box-shadow: var(--selection-ring, 0 0 transparent),
+    0 0 0 calc(var(--selection-width, 0px) + 3px) white !important;
+}
 .gentle {
   margin: 0;
   background: #e7f3ff;
