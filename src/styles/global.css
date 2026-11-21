@@ -389,7 +389,7 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   border-color: #fff;
   box-shadow: inset 0 0 0 2px rgba(36, 48, 86, 0.2), var(--shadow);
 }
-.swatch.on, .bg-swatch.on, .placed.on {
+.swatch.on, .bg-swatch.on {
   outline: 3px solid var(--ink);
   --selection-ring: 0 0 0 3px var(--ink);
   --selection-width: 3px;
@@ -470,6 +470,11 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   box-shadow: none;
   padding: 0;
   min-height: 0;
+}
+.placed.on {
+  --selection-ring: 0 0 0 3px white, 0 0 0 6px #12141c;
+  --selection-width: 6px;
+  box-shadow: var(--selection-ring);
 }
 .placed svg { width: 100%; height: auto; display: block; }
 .action-bar {
@@ -633,6 +638,11 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   outline-offset: calc(var(--selection-width, 0px) + 3px);
   box-shadow: var(--selection-ring, 0 0 transparent),
     0 0 0 calc(var(--selection-width, 0px) + 3px) white !important;
+}
+@media (forced-colors: active) {
+  .btn.on, .tool.on, .tab.on, .placed.on, .glow {
+    border: 3px solid Highlight;
+  }
 }
 .gentle {
   margin: 0;

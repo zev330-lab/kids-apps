@@ -85,6 +85,57 @@ function Pal({
   );
 }
 
+function Cat() {
+  return (
+    <g>
+      <path d="M14 18Q31 20 32 8l1-12q1-13 10-13 8 0 8 8h-7q0-3-2-2l-2 19q-3 21-26 19z"
+        fill="#f0b429" stroke="#12141c" strokeWidth={2} />
+      <Pal color="#f0b429" ears="point">
+        <path d="M-12 -5l-21-5m21 8-20 4M12 -5l21-5M12 -2l20 4" stroke="#12141c" strokeWidth={3} />
+      </Pal>
+    </g>
+  );
+}
+
+function Fox() {
+  return (
+    <g strokeLinejoin="round">
+      <path d="M10 16l11-10 13-4 18-22-1 28-6 13-13 9H16z" fill="#ff7a3c" stroke="#12141c" strokeWidth={2} />
+      <path d="M34 2l18-22-1 28-7-5-2 6z" fill="#fff" stroke="#12141c" strokeWidth={2} />
+      <Pal color="#ff7a3c" ears="point">
+        <path d="M-26 -10l17 5 9 4 9-4 17-5-8 13L0 12-18 3z" fill="#fff" stroke="#12141c" strokeWidth={2} />
+        <path d="M-5 0H5L0 6z" fill="#12141c" />
+      </Pal>
+    </g>
+  );
+}
+
+function Owl() {
+  return (
+    <g stroke="#12141c" strokeWidth={2} strokeLinejoin="round">
+      <path d="M-25 -33l13 8h24l13-8v41l-7 17-18 6-18-6-7-17z" fill="#c68642" />
+      <path d="M-21 -1l-8 8v15l13-10z M21 -1l8 8v15L16 12z" fill="#995f32" />
+      <Box x={-23} y={-22} w={21} h={22} rx={7} fill="#fff1c9" />
+      <Box x={2} y={-22} w={21} h={22} rx={7} fill="#fff1c9" />
+      <path d="M-15 -14h7v8h-7z M8 -14h7v8H8z" fill="#12141c" />
+      <path d="M-5 -2H5L0 7z" fill="#ffad24" />
+    </g>
+  );
+}
+
+function Mouse() {
+  return (
+    <g>
+      <path d="M15 22h12q12 0 12-10V7q0-7 8-7" fill="none" stroke="#12141c" strokeWidth={3} strokeLinecap="round" />
+      <Pal color="#c5cbe0" ears="none">
+        <Box x={-31} y={-41} w={20} h={18} rx={8} fill="#c5cbe0" />
+        <Box x={11} y={-41} w={20} h={18} rx={8} fill="#c5cbe0" />
+        <path d="M-5 -7H5L0 -1z" fill="#12141c" />
+      </Pal>
+    </g>
+  );
+}
+
 function Hen() {
   return (
     <g stroke="#12141c" strokeWidth={2} strokeLinejoin="round">
@@ -636,15 +687,15 @@ const MAP: Record<SpriteName, () => ReactNode> = {
   comet: Comet,
   satellite: Satellite,
   rabbit: () => <Pal color="#f4f7ff" ears="tall" />,
-  mouse: () => <Pal color="#c5cbe0" ears="square" />,
+  mouse: Mouse,
   crystal: Crystal,
   kite: Kite,
   flag: Flag,
   flower: Flower,
   tree: Tree,
   mushroom: Mushroom,
-  fox: () => <Pal color="#ff7a3c" ears="point" />,
-  owl: () => <Pal color="#c68642" ears="point" />,
+  fox: Fox,
+  owl: Owl,
   firefly: Firefly,
   unicorn: Unicorn,
   lily: Lily,
@@ -667,7 +718,7 @@ const MAP: Record<SpriteName, () => ReactNode> = {
   apple: Apple,
   hill: Hill,
   balloon: Balloon,
-  cat: () => <Pal color="#f0b429" ears="point" />,
+  cat: Cat,
   heart: Heart,
   candy: Candy,
   cookie: Cookie,
