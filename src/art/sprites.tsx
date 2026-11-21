@@ -622,8 +622,10 @@ function Leaf() {
 function Nest() {
   return (
     <g>
+      <ellipse cx={2} cy={-2} rx={9} ry={12} fill="#0c1018" opacity={0.35} />
+      <ellipse cx={0} cy={-4} rx={9} ry={12} fill="#f4f7ff" stroke="#12141c" strokeWidth={2} />
+      <ellipse cx={-3} cy={-9} rx={2} ry={4} fill="rgba(255,255,255,0.8)" />
       <Box x={-22} y={0} w={44} h={16} fill="#e0a15a" />
-      <Box x={-8} y={-12} w={16} h={16} fill="#fff" />
     </g>
   );
 }
