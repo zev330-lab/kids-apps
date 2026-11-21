@@ -12,21 +12,20 @@ export function Garden({ compact = false }: { compact?: boolean }) {
     <section className={compact ? "garden compact" : "garden"} aria-label="Growing garden">
       <div className="garden-art" aria-hidden="true">
         <svg viewBox="0 0 220 160">
-          <ellipse cx="110" cy="142" rx="70" ry="12" fill="rgba(36,48,86,0.08)" />
-          <path d="M70 120 H150 L140 148 H80 Z" fill="#e07a4c" />
-          <path d="M78 120 H142 L138 100 H82 Z" fill="#f4a261" />
-          <path d="M110 118 V70" stroke="#3a9d4e" strokeWidth="5" strokeLinecap="round" />
+          <rect x="70" y="118" width="80" height="28" rx="4" fill="#8a3a12" />
+          <rect x="78" y="108" width="64" height="16" rx="3" fill="#e07a3c" />
+          <rect x="104" y="70" width="12" height="42" fill="#1fbf55" />
           {Array.from({ length: flowers }).map((_, index) => {
             const side = index % 2 === 0 ? -1 : 1;
-            const y = 108 - index * 8;
+            const y = 100 - index * 8;
             return (
-              <g key={index} transform={`translate(${110 + side * 16} ${y})`}>
-                <ellipse cx={side * 10} cy="0" rx="12" ry="6" fill="#7dce6a" transform={`rotate(${side * -30})`} />
-                {index % 3 === 2 && <circle cx={side * 22} cy="-6" r="6" fill="#ff8fab" />}
+              <g key={index}>
+                <rect x={110 + side * 18} y={y} width="16" height="10" rx="2" fill="#39e06e" />
+                {index % 3 === 2 && <rect x={110 + side * 28} y={y - 8} width="10" height="10" fill="#ff4d8d" />}
               </g>
             );
           })}
-          {growth.practices > 0 && <circle cx="110" cy="62" r="10" fill="#ffd166" />}
+          {growth.practices > 0 && <rect x="100" y="54" width="20" height="20" rx="3" fill="#ffe14a" />}
         </svg>
       </div>
       <div>
