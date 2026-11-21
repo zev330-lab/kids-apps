@@ -3,14 +3,14 @@ import type { GroundName, PictureSpec, SkyName } from "./types";
 import { Sprite } from "./sprites";
 
 const SKY: Record<SkyName, [string, string]> = {
-  day: ["#3ec6ff", "#163a73"],
-  dusk: ["#ff7a3c", "#3a1868"],
-  sea: ["#1aa7d4", "#07283d"],
-  meadow: ["#49c8ff", "#145c38"],
-  space: ["#2a1868", "#0c1020"],
-  candy: ["#ff4d9a", "#3a1460"],
-  cave: ["#3a2a6e", "#120e22"],
-  sunset: ["#ff7a3c", "#5a1848"],
+  day: ["#7ad4ff", "#2f6cb5"],
+  dusk: ["#ff9a55", "#6a3a8a"],
+  sea: ["#4ed4f0", "#1a78b0"],
+  meadow: ["#7ad4ff", "#2f8a52"],
+  space: ["#6a78d8", "#2c3f86"],
+  candy: ["#ff7ab8", "#7a3a9a"],
+  cave: ["#7a68c8", "#3a4a86"],
+  sunset: ["#ff9a55", "#c45a78"],
 };
 
 const GROUND: Record<Exclude<GroundName, "none">, [string, string]> = {
@@ -71,7 +71,7 @@ export function Picture({ spec, label }: { spec: PictureSpec; label: string }) {
 export function SpriteBadge({ name, label }: { name: PictureSpec["items"][number]["s"]; label: string }) {
   return (
     <svg className="badge-art" viewBox="-70 -70 140 140" role="img" aria-label={label}>
-      <rect x={-62} y={-62} width={124} height={124} rx={16} fill="#1a2236" />
+      <rect x={-62} y={-62} width={124} height={124} rx={16} fill="#f7f9fd" />
       <rect x={-62} y={-62} width={124} height={124} rx={16} fill="none" stroke="#f0b429" strokeWidth={5} />
       <Sprite name={name} />
     </svg>

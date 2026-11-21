@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#14c8ef"/>
+  <ellipse cx="512" cy="900" rx="300" ry="36" fill="#087894"/>
+  <polygon points="250,300 500,175 790,330 540,460" fill="#8eabd4" stroke="#071018" stroke-width="22" stroke-linejoin="round"/>
+  <polygon points="250,300 540,460 540,830 250,670" fill="#35548a" stroke="#071018" stroke-width="22" stroke-linejoin="round"/>
+  <polygon points="540,460 790,330 790,700 540,830" fill="#1c335c" stroke="#071018" stroke-width="22" stroke-linejoin="round"/>
+  <polygon points="310,470 500,575 500,690 310,590" fill="#042830" stroke="#071018" stroke-width="16" stroke-linejoin="round"/>
+  <polygon points="330,500 470,575 470,545 345,485" fill="#7ef6ff" opacity="0.9"/>
+  <rect x="350" y="530" width="52" height="58" fill="#f4f7ff" stroke="#071018" stroke-width="8"/>
+  <rect x="424" y="548" width="52" height="58" fill="#f4f7ff" stroke="#071018" stroke-width="8"/>
+  <rect x="366" y="546" width="22" height="26" fill="#071018"/>
+  <rect x="440" y="564" width="22" height="26" fill="#071018"/>
+  <polygon points="430,210 500,175 560,210 500,248" fill="#d6ff4a" stroke="#071018" stroke-width="16" stroke-linejoin="round"/>
+  <polygon points="500,248 540,270 500,310 460,270" fill="#9ad420" stroke="#071018" stroke-width="12"/>
+</svg>
