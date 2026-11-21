@@ -101,7 +101,7 @@ function SightRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
           <button
             key={word}
             type="button"
-            className={quiz.showHint && word === item.answer ? "choice glow" : "choice word-choice"}
+            className={quiz.showHint && word === item.answer ? "choice word-choice glow" : "choice word-choice"}
             onClick={() => {
               if (word === item.answer) {
                 const upcoming = round[quiz.index + 1];

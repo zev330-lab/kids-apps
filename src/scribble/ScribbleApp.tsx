@@ -50,7 +50,6 @@ type Fit = { scale: number; x: number; y: number; dpr: number; cssW: number; css
 
 export function ScribbleApp() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const fitRef = useRef<Fit>({ scale: 1, x: 0, y: 0, dpr: 1, cssW: 1, cssH: 1 });
   const strokesRef = useRef<Stroke[]>([]);
@@ -81,12 +80,10 @@ export function ScribbleApp() {
   }, [strokes]);
 
   useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
     const resize = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = wrap.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.max(1, Math.floor(rect.width * dpr));
       canvas.height = Math.max(1, Math.floor(rect.height * dpr));
@@ -103,9 +100,9 @@ export function ScribbleApp() {
     };
     resize();
     const observer = new ResizeObserver(resize);
-    observer.observe(wrap);
+    observer.observe(canvas);
     return () => observer.disconnect();
-  }, [alive]);
+  }, [alive, gallery]);
 
   function paint(next = strokesRef.current) {
     const canvas = canvasRef.current;
@@ -438,7 +435,7 @@ export function ScribbleApp() {
               </div>
             </div>
           ) : (
-            <div className="canvas-wrap" ref={wrapRef}>
+            <div className="canvas-wrap">
               <canvas
                 ref={canvasRef}
                 aria-label="Drawing canvas"
@@ -462,7 +459,7 @@ export function ScribbleApp() {
                 aria-pressed={background === item.id}
                 onClick={() => setBackground(item.id)}
               >
-                {item.label}
+                <span>{item.label}</span>
               </button>
             ))}
           </div>

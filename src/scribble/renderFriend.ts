@@ -170,7 +170,11 @@ function eye(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, px:
   ctx.strokeStyle = "#12141c";
   ctx.lineWidth = Math.max(2, r * 0.14);
   ctx.beginPath();
-  ctx.roundRect(x - r, y - r, side, side, 4);
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x - r, y - r, side, side, 4);
+  } else {
+    ctx.rect(x - r, y - r, side, side);
+  }
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = "#12141c";
