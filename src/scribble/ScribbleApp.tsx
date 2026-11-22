@@ -1,3 +1,4 @@
+import { FRIEND_NAMES } from "../lib/names";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { speak } from "../lib/speech";
 import { StickerButton } from "./StickerButton";
@@ -47,8 +48,6 @@ const BRUSHES = [
   { id: "big", size: 32, label: "Big" },
   { id: "jumbo", size: 52, label: "Jumbo" },
 ];
-
-const NAMES = ["Pip", "Bo", "Sunny", "Dot", "Momo", "Nib"];
 
 type Fit = { scale: number; x: number; y: number; dpr: number; cssW: number; cssH: number };
 
@@ -251,7 +250,7 @@ export function ScribbleApp() {
   function transformSticker(scale: number, angle: number) {
     checkpoint();
     setStickers(list => list.map(s => s.id === selected
-      ? fitSticker({ ...s, scale: Math.max(0.65, Math.min(2, s.scale + scale)), rot: (s.rot + angle) % 360 })
+      ? fitSticker({ ...s, scale: Math.max(0.65, Math.min(2, s.scale + scale)), rot: (s.rot + angle) % 360 }, stageRef.current?.clientWidth)
       : s));
   }
 
@@ -600,7 +599,7 @@ export function ScribbleApp() {
               <input value={friendName} maxLength={16} onChange={(event) => setFriendName(event.target.value)} />
             </label>
             <div className="name-chips">
-              {NAMES.map((name) => (
+              {FRIEND_NAMES.map((name) => (
                 <button key={name} type="button" className="chip" onClick={() => setFriendName(name)}>
                   {name}
                 </button>

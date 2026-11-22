@@ -1,25 +1,32 @@
 import { defineConfig } from "vite";
 
-// Two fixtures for upgrading a real worker in an isolated Playwright context.
-// Only the test preview server exposes them. All app requests use dist/.
+// Each fresh test context gets its own deployment path. Switching the files on
+// the server never touches browser registrations, cache storage or open tabs.
 export default defineConfig({
-  plugins: [
-    {
-      name: "previous-install",
-      configurePreviewServer(server) {
-        server.middlewares.use((req, res, next) => {
-          // Mount the same dist/ under the Pages project prefix for offline tests.
-          if (req.url?.startsWith("/kids-apps/")) req.url = req.url.slice("/kids-apps".length);
-          if (req.url === "/previous-install") {
-            res.setHeader("Content-Type", "text/html");
-            res.end("<!doctype html><title>Previous install</title>");
-          } else if (req.url === "/previous-worker.js") {
-            res.setHeader("Content-Type", "text/javascript");
-            res.setHeader("Cache-Control", "no-store");
-            res.end("self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));");
-          } else next();
-        });
-      },
+  build: { outDir: ".cache/e2e-preview" },
+  plugins: [{
+    name: "playtime-release-server",
+    configurePreviewServer(server) {
+      const deployments = new Map<string, string>();
+      server.middlewares.use((req, res, next) => {
+        const url = new URL(req.url ?? "/", "http://localhost");
+        const deploy = /^\/deploy\/([a-f0-9-]+)\/(first|legacy|current)$/.exec(url.pathname);
+        if (req.method === "POST" && deploy) {
+          deployments.set(deploy[1], deploy[2]);
+          res.writeHead(204).end();
+          return;
+        }
+        const scoped = /^\/releases\/([a-f0-9-]+)\/(.*)$/.exec(url.pathname);
+        const release = scoped ? deployments.get(scoped[1]) : "current";
+        if (!release) {
+          res.writeHead(404).end();
+          return;
+        }
+        const path = scoped ? scoped[2] : url.pathname.replace(/^\/(kids-apps\/)?/, "");
+        req.url = `/${release}/${path || "index.html"}${url.search}`;
+        res.setHeader("Cache-Control", "no-store");
+        next();
+      });
     },
-  ],
+  }],
 });

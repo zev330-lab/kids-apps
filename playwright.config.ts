@@ -41,7 +41,7 @@ export default defineConfig({
       : []),
   ]),
   webServer: {
-    command: "npm run build && npm run preview -- --config tests/e2e/preview.config.ts --port 4184 --strictPort",
+    command: "node tests/e2e/build-releases.mjs && npm run preview -- --config tests/e2e/preview.config.ts --port 4184 --strictPort",
     url: "http://127.0.0.1:4184",
     reuseExistingServer: false,
     timeout: 120_000,

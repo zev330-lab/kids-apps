@@ -1,3 +1,5 @@
+import { DEFAULT_HERO } from "./names";
+
 export type EndingMap = Record<string, string[]>;
 
 export type Growth = {
@@ -37,12 +39,12 @@ export function sanitizeName(raw: string): string {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 16);
-  return cleaned || "Parker";
+  return cleaned || DEFAULT_HERO;
 }
 
 export function loadHero(): string {
   const stored = read(HERO);
-  return stored ? sanitizeName(stored) : "Parker";
+  return stored ? sanitizeName(stored) : DEFAULT_HERO;
 }
 
 export function saveHero(raw: string): string {

@@ -6,7 +6,7 @@ export async function playStories(page: Page) {
   await page.getByRole("button", { name: /Story Builder/ }).tap();
   await expect(page).toHaveURL(/#\/story$/);
   await toggleSound(page);
-  await page.getByLabel("The hero's name").fill("Jo");
+  await page.getByLabel("The hero's name").fill("Bo");
   await button(page, "Open the sticker book").tap();
   await toggleSound(page);
   await button(page, "Home").tap();
@@ -31,7 +31,7 @@ export async function playStories(page: Page) {
       await expect(page.locator(".story-copy h2")).toHaveText(scene.title);
       if (visited.has(id)) return;
       visited.add(id);
-      await expect(page.locator(".story-copy > p").nth(1)).toHaveText(scene.text.replaceAll("{{name}}", "Jo"));
+      await expect(page.locator(".story-copy > p").nth(1)).toHaveText(scene.text.replaceAll("{{name}}", "Bo"));
       await hear(page, button(page, "Read to me"));
       if (scene.ending) {
         await button(page, "Stickers").tap();

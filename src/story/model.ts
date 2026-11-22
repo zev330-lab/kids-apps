@@ -30,12 +30,12 @@ export function fillName(text: string, name: string) {
   return text.replaceAll("{{name}}", name);
 }
 
-export function sceneSpeech(scene: Scene, name: string) {
-  const body = `${scene.title}. ${fillName(scene.text, name)}`;
-  if (scene.ending) return `${body} ${fillName(scene.ending.note, name)}`;
-  if (!scene.choices?.length) return body;
-  const choices = scene.choices.map((choice, index) => `Choice ${index + 1}. ${choice.label}`).join(". ");
-  return `${body} ${choices}`;
+export function sceneSpeech(scene: Scene, name: string): string[] {
+  const choices = scene.choices?.map((choice, index) => `Choice ${index + 1}. ${choice.label}`).join(". ");
+  const script = [scene.title + ".", scene.text, scene.ending?.note, choices].filter(Boolean).join(" ");
+  return script.split(/(\{\{name\}\}(?:'s)?)/).map((part) =>
+    part.includes("{{name}}") ? fillName(part, name) : part.trim(),
+  ).filter((part) => /[\p{L}\p{N}]/u.test(part));
 }
 
 export function lintWorld(world: World): string[] {

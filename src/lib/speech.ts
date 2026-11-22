@@ -29,13 +29,16 @@ export function silence() {
   finish = undefined;
 }
 
+export function localVoice() {
+  return window.speechSynthesis?.getVoices().find((voice) => voice.localService && voice.lang.startsWith("en"));
+}
+
 function fallback(text: string, rate: number) {
-  if (!window.speechSynthesis) return Promise.resolve();
+  const local = localVoice();
+  if (!local) return Promise.resolve();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.rate = rate;
-  const local = window.speechSynthesis.getVoices().find((v) => v.localService && v.lang.startsWith("en"));
-  if (!local) return Promise.resolve();
   utterance.voice = local;
   return new Promise<void>((resolve) => {
     finish = resolve;
@@ -44,45 +47,55 @@ function fallback(text: string, rate: number) {
   });
 }
 
-export async function speak(text: string, rate = 0.94, next?: string) {
+export async function speak(text: string | string[], rate = 0.94, next?: string) {
   silence();
-  if (isMuted()) return;
   const ticket = generation;
-  await playClip(text, rate, ticket);
-  if (next && generation === ticket) await speak(next);
+  const parts = typeof text === "string" ? [text] : text;
+  for (const part of parts) {
+    if (generation !== ticket || isMuted()) return;
+    await playClip(part, rate, ticket);
+  }
+  if (next && generation === ticket && !isMuted()) await speak(next);
 }
 
 async function playClip(text: string, rate: number, ticket: number) {
-  const file = clips[text];
-  if (!file) return fallback(text, rate);
-  const context = audioContext();
-  if (!context) return;
-  request = new AbortController();
+  if (!Object.hasOwn(clips, text)) return fallback(text, rate);
+  const controller = new AbortController();
+  request = controller;
   try {
-    const response = await fetch(new URL(import.meta.env.BASE_URL + file, document.baseURI), {
-      signal: request.signal,
+    const context = audioContext();
+    if (!context) throw new Error("Web Audio is unavailable");
+    if (context.state === "suspended") await context.resume();
+    if (controller.signal.aborted) return;
+    if (context.state !== "running") throw new Error("Audio is unavailable");
+    const response = await fetch(new URL(import.meta.env.BASE_URL + clips[text], document.baseURI), {
+      signal: controller.signal,
     });
-    if (!response.ok) {
-      if (generation === ticket && [404, 410].includes(response.status)) return fallback(text, rate);
-      return;
-    }
+    if (!response.ok) throw new Error(`Recording returned ${response.status}`);
     const buffer = await context.decodeAudioData(await response.arrayBuffer());
     if (generation !== ticket || isMuted()) return;
     const source = context.createBufferSource();
-    current = source;
     source.buffer = buffer;
     source.connect(context.destination);
     await new Promise<void>((resolve) => {
-      finish = resolve;
       source.onended = () => {
         source.disconnect();
         current = undefined;
         finish = undefined;
         resolve();
       };
-      source.start();
+      try {
+        source.start();
+      } catch (error) {
+        source.disconnect();
+        throw error;
+      }
+      current = source;
+      finish = resolve;
     });
   } catch {
-    // Navigation, mute and a newer utterance all cancel a pending fetch.
+    if (generation === ticket && !isMuted()) await fallback(text, rate);
+  } finally {
+    if (request === controller) request = undefined;
   }
 }

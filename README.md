@@ -30,7 +30,7 @@ npm run preview
 
 ## Add to the home screen
 
-The build is a PWA. In Safari or Chrome, use Share or the browser menu and choose **Add to Home Screen**. After installation finishes, the app and narration work offline. Playtime checks for updates on launch, when it becomes visible and hourly while open. Finish or save the current activity, then tap the refresh prompt. The Home footer shows the installed build. Devices upgrading from the older automatic worker pick up the new Home screen on their next navigation or relaunch.
+The build is a PWA. In Safari or Chrome, use Share or the browser menu and choose **Add to Home Screen**. The app and Parker recordings work offline after installation. Story recordings download in the background while online and work offline once cached. Playtime checks for updates on launch, when it becomes visible and hourly while open. Choose Later to keep playing, or finish the activity and tap the refresh prompt. The Home footer shows the installed build. Devices upgrading from the older automatic worker pick up the new Home screen on their next navigation or relaunch.
 
 ## Deploy for free
 

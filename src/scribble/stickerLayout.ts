@@ -10,9 +10,10 @@ export function openSpot(stickers: Point[]) {
   return spots.reduce((best, next) => (distance(next) > distance(best) ? next : best));
 }
 
-export function fitSticker(sticker: PlacedSticker): PlacedSticker {
+export function fitSticker(sticker: PlacedSticker, stageWidth = LOGICAL_W): PlacedSticker {
   const radians = (sticker.rot * Math.PI) / 180;
-  const halfWidth = (STICKER_WIDTH * sticker.scale * (Math.abs(Math.cos(radians)) + Math.abs(Math.sin(radians)))) / 2;
+  const targetWidth = Math.max(STICKER_WIDTH * sticker.scale, 44 / stageWidth);
+  const halfWidth = targetWidth * (Math.abs(Math.cos(radians)) + Math.abs(Math.sin(radians))) / 2;
   const halfHeight = (halfWidth * LOGICAL_W) / LOGICAL_H;
   return {
     ...sticker,

@@ -1,3 +1,4 @@
+import { RECORDED_NAMES } from "../../src/lib/names";
 import { lines } from "../../src/parker/lines";
 import { NOTES } from "../../src/scribble/notes";
 import { WORLDS } from "../../src/story/worlds";
@@ -121,10 +122,13 @@ for (const line of [FEELING_SHORT, lines.countMiss, lines.addMiss]) hint(line);
 for (let n = 5; n <= 20; n++) add(lines.count(n));
 for (let a = 1; a < 10; a++) for (let b = 1; a + b <= 10; b++) add(lines.add(a, b));
 for (const note of Object.values(NOTES)) add(note);
+for (const name of [...RECORDED_NAMES, "our explorer"]) {
+  add(name, name, "story");
+  add(name + "'s", name + "'s", "story");
+}
 for (const world of WORLDS)
   for (const scene of Object.values(world.scenes)) {
-    const text = sceneSpeech(scene, "our explorer");
-    add(text, text, "story");
+    for (const text of sceneSpeech(scene, "Parker")) add(text, text, "story");
   }
 
 export const catalog = [...clips.values()];

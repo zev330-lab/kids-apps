@@ -364,7 +364,7 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   border: 4px solid #1c3358;
   box-shadow: 0 5px 0 #1c3358;
 }
-.stage-art { position: relative; aspect-ratio: 10 / 7; }
+.stage-art { container-type: inline-size; position: relative; aspect-ratio: 10 / 7; }
 .artwork { position: absolute; inset: 0; }
 .stage-art canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .stage-note { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -460,14 +460,17 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   background: transparent;
   box-shadow: none;
   padding: 0;
-  min-height: 0;
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
 }
 .placed.on {
   --selection-ring: 0 0 0 3px white, 0 0 0 6px #12141c;
   --selection-width: 6px;
   box-shadow: var(--selection-ring);
 }
-.placed svg { width: 100%; height: auto; display: block; }
+.placed svg { width: var(--sticker-size); height: auto; display: block; }
 .action-bar {
   display: flex;
   flex-wrap: wrap;
@@ -797,5 +800,11 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
 }
 
 .build-stamp { margin-top: 16px; font-size: 0.8rem; }
-.update-prompt { position: fixed; z-index: 25; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: max-content; max-width: 95vw; }
+.update-prompt {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: max(8px, env(safe-area-inset-top)) var(--space) 8px;
+}
 .hint-art { flex-wrap: wrap; }

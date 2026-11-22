@@ -4,6 +4,14 @@ declare global {
   interface Window {
     buttonAudit: { seen: Set<string>; tapped: Set<string>; scan(): void };
     voiceStarts: number;
+    playback: {
+      source: AudioBufferSourceNode;
+      start: number;
+      duration: number;
+      stop?: number;
+      end?: number;
+      overlapping: number;
+    }[];
     missingSpeech: string[];
     shares: File[];
     resetRoundSeed(): void;
@@ -12,8 +20,8 @@ declare global {
 
 // Use the real production DOM and captured clicks. A newly rendered button is
 // outstanding until the browser dispatches a click on that particular control.
-export async function installAudit(page: Page) {
-  await page.addInitScript(() => {
+export async function installAudit(page: Page, { tracePlayback = false } = {}) {
+  await page.addInitScript((tracePlayback) => {
     const seen = new Set<string>(),
       tapped = new Set<string>();
     function key(el: HTMLButtonElement) {
@@ -62,9 +70,25 @@ export async function installAudit(page: Page) {
     window.voiceStarts = 0;
     window.missingSpeech = [];
     const start = AudioBufferSourceNode.prototype.start;
-    AudioBufferSourceNode.prototype.start = function () {
+    const stop = AudioBufferSourceNode.prototype.stop;
+    window.playback = [];
+    AudioBufferSourceNode.prototype.start = function (...args) {
+      start.apply(this, args);
       window.voiceStarts++;
-      start.call(this, 0, 0, 0.035);
+      if (!tracePlayback) return;
+      const line: Window["playback"][number] = {
+        source: this,
+        start: this.context.currentTime,
+        duration: this.buffer!.duration,
+        overlapping: window.playback.filter((other) => other.stop === undefined && other.end === undefined).length,
+      };
+      this.addEventListener("ended", () => { line.end = this.context.currentTime; }, { once: true });
+      window.playback.push(line);
+    };
+    if (tracePlayback) AudioBufferSourceNode.prototype.stop = function (...args) {
+      stop.apply(this, args);
+      const line = window.playback.find((play) => play.source === this);
+      if (line) line.stop = this.context.currentTime;
     };
     if (window.speechSynthesis) {
       window.speechSynthesis.speak = (utterance) => {
@@ -79,7 +103,7 @@ export async function installAudit(page: Page) {
       },
       configurable: true,
     });
-  });
+  }, tracePlayback);
 }
 
 export const button = (page: Page, name: string) => page.getByRole("button", { name, exact: true });

@@ -68,3 +68,39 @@ test("every tiny book page and word plays its recording", async ({ page }) => {
     await button(page, "Rest").tap();
   }
 });
+
+test("narration finishes at real speed, replaces a playing line and stops on mute", async ({ page }) => {
+  await installAudit(page, { tracePlayback: true });
+  await page.goto("/#/parker");
+  await page.getByRole("button", { name: /^Letter sounds/ }).tap();
+  await expect.poll(() => page.evaluate(() => window.playback[0]?.source.context.state)).toBe("running");
+  await expect.poll(() => page.evaluate(() => {
+    const line = window.playback[0];
+    return line.source.context.currentTime - line.start;
+  })).toBeGreaterThan(0.15);
+  await expect.poll(() => page.evaluate(() => window.playback[0].end), { timeout: 30_000 }).toBeDefined();
+  const natural = await page.evaluate(() => {
+    const { start, end, duration, stop } = window.playback[0];
+    return { elapsed: end! - start, duration, stopped: stop !== undefined };
+  });
+  expect(natural.stopped).toBe(false);
+  expect(natural.duration).toBeGreaterThan(1);
+  expect(natural.elapsed).toBeGreaterThanOrEqual(natural.duration - 0.05);
+
+  await hear(page, button(page, "Hear it"));
+  await hear(page, button(page, "Give me a hint"));
+  await page.getByRole("button", { name: "Sound is on. Turn sound off." }).tap();
+  await expect.poll(() => page.evaluate(() => window.playback.slice(1).every(line => line.end !== undefined))).toBe(true);
+  const replaced = await page.evaluate(() => window.playback.slice(1).map(({ start, stop, end, duration, overlapping }) =>
+    ({ start, stop, end, duration, overlapping }),
+  ));
+  expect(replaced).toHaveLength(2);
+  expect(replaced[0].stop!).toBeLessThanOrEqual(replaced[1].start);
+  for (const line of replaced) {
+    expect(line.overlapping).toBe(0);
+    expect(line.stop!).toBeLessThan(line.start + line.duration);
+    expect(line.end!).toBeLessThan(line.start + line.duration);
+  }
+  await button(page, "Hear it").tap();
+  expect(await page.evaluate(() => window.voiceStarts)).toBe(3);
+});

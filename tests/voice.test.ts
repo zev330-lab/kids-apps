@@ -3,6 +3,9 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import manifest from "../src/lib/voice-manifest.json";
 import { catalog } from "../scripts/voice/catalog";
+import { RECORDED_NAMES } from "../src/lib/names";
+import { sceneSpeech } from "../src/story/model";
+import { WORLDS } from "../src/story/worlds";
 import { LETTERS } from "../src/parker/content";
 import { lines } from "../src/parker/lines";
 
@@ -23,6 +26,18 @@ describe("offline narration", () => {
       const data = clip(entry.text);
       expect(data.toString("ascii", 4, 8)).toBe("ftyp");
       expect(data.includes(Buffer.from("mp4a"))).toBe(true);
+    }
+  });
+
+  it("has recordings for each displayed preset name in every story, including possessives", () => {
+    for (const name of [...RECORDED_NAMES, "our explorer"]) {
+      for (const world of WORLDS) for (const scene of Object.values(world.scenes)) {
+        const parts = sceneSpeech(scene, name);
+        for (const part of parts) expect(files[part]).toMatch(/^voice\/story\//);
+        const template = [scene.title, scene.text, scene.ending?.note].join(" ");
+        const slots = [...template.matchAll(/\{\{name\}\}('s)?/g)].map(match => name + (match[1] ?? ""));
+        expect(parts.filter(part => part === name || part === name + "'s")).toEqual(slots);
+      }
     }
   });
 

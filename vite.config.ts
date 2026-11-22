@@ -2,15 +2,20 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig(({ mode }) => {
+import { offlineVoice } from "./scripts/voice/offline";
+
+export default defineConfig(({ mode, command }) => {
   const fromFile = loadEnv(mode, process.cwd(), "VITE_").VITE_BASE;
   const base = process.env.VITE_BASE || fromFile || "./";
+
+  const voice = command === "build" ? offlineVoice() : null;
 
   return {
     base,
     define: { __PLAYTIME_BUILD__: JSON.stringify(new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC") },
     plugins: [
       react(),
+      voice?.plugin,
       VitePWA({
         registerType: "prompt",
         injectRegister: false,
@@ -49,11 +54,11 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          importScripts: ["./upgrade-legacy.js"],
+          importScripts: ["./upgrade-legacy.js", ...(voice ? ["./" + voice.worker] : [])],
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: false,
-          globPatterns: ["**/*.{js,css,html,svg,png,ico,woff,woff2,m4a}"],
+          globPatterns: ["index.html", "assets/*.{js,css,woff,woff2}", "favicon.svg", "icons/*.png", "voice/packs/*.bin"],
           navigateFallback: "index.html",
           // Hash routes do not need the server. Ignore the dev-only vite client.
           navigateFallbackDenylist: [/^\/api/],

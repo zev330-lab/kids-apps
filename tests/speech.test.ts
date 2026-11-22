@@ -17,6 +17,7 @@ let synthesize: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   sources = [];
   vi.mocked(audioContext).mockReturnValue({
+    state: "running",
     createBufferSource: () => {
       const node = source();
       sources.push(node);
@@ -76,16 +77,52 @@ it("keeps a superseded download silent even when it resolves after cancellation"
   expect(sources).toHaveLength(0);
 });
 
-it("honors mute and reserves local system speech for a missing recording", async () => {
+it.each(["no context", "network", "decode", "start", "resume", 404, 410, 503])(
+  "speaks the same line locally after recording failure (%s)",
+  async (failure) => {
+    const ctx = audioContext()!;
+    if (failure === "no context") vi.mocked(audioContext).mockReturnValue(null);
+    if (failure === "network") fetchClip.mockRejectedValueOnce(new TypeError("offline"));
+    if (failure === "decode") ctx.decodeAudioData = vi.fn().mockRejectedValue(new Error("invalid AAC"));
+    if (failure === "start") ctx.createBufferSource = () => {
+      const node = source();
+      node.start.mockImplementation(() => { throw new Error("start failed"); });
+      return node as unknown as AudioBufferSourceNode;
+    };
+    if (failure === "resume") Object.assign(ctx, { state: "suspended", resume: () => Promise.reject() });
+    if (typeof failure === "number") fetchClip.mockResolvedValueOnce(new Response(null, { status: failure }));
+    await speak("Letter B");
+    expect(synthesize).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ text: "Letter B" }));
+  },
+);
+
+it.each(["silence", "mute"])("does not fall back after %s during a failed download", async (reason) => {
+  let reject!: (error: Error) => void;
+  fetchClip.mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail; }));
+  const pending = speak(["Letter B", "Letter C"]);
+  if (reason === "mute") vi.mocked(isMuted).mockReturnValue(true);
+  else silence();
+  reject(new Error("download interrupted"));
+  await pending;
+  expect(synthesize).not.toHaveBeenCalled();
+  expect(fetchClip).toHaveBeenCalledTimes(1);
+});
+
+it("honors mute before fetching or speaking", async () => {
   vi.mocked(isMuted).mockReturnValue(true);
   await speak("Letter B");
   expect(fetchClip).not.toHaveBeenCalled();
   expect(synthesize).not.toHaveBeenCalled();
-  vi.mocked(isMuted).mockReturnValue(false);
-  fetchClip.mockResolvedValueOnce(new Response(null, { status: 404 }));
-  await speak("Letter B");
-  expect(synthesize).toHaveBeenCalledOnce();
-  fetchClip.mockRejectedValueOnce(new Error("interrupted request"));
-  await speak("Letter B");
-  expect(synthesize).toHaveBeenCalledTimes(1);
+});
+
+it("keeps a custom name local between two recorded story parts", async () => {
+  const reading = speak(["Letter B", "Jo", "Letter C"]);
+  await vi.waitFor(() => expect(sources[0]?.start).toHaveBeenCalled());
+  expect(synthesize).not.toHaveBeenCalled();
+  sources[0].onended!();
+  await vi.waitFor(() => expect(sources[1]?.start).toHaveBeenCalled());
+  expect(synthesize).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ text: "Jo" }));
+  sources[1].onended!();
+  await reading;
+  expect(fetchClip).toHaveBeenCalledTimes(2);
 });

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { type CSSProperties, useRef } from "react";
 import type { PlacedSticker } from "./renderFriend";
 import { fitSticker, STICKER_WIDTH } from "./stickerLayout";
 import { STICKER_LABELS, stickerSvg } from "./stickers";
@@ -30,11 +30,12 @@ export function StickerButton({
       type="button"
       className={selected ? "placed on" : "placed"}
       style={{
+        "--sticker-size": `${STICKER_WIDTH * sticker.scale * 100}cqw`,
         width: `${STICKER_WIDTH * sticker.scale * 100}%`,
         left: `${sticker.x * 100}%`,
         top: `${sticker.y * 100}%`,
         transform: `translate(-50%, -50%) rotate(${sticker.rot}deg)`,
-      }}
+      } as CSSProperties}
       aria-label={`Placed ${STICKER_LABELS[sticker.kind]}`}
       aria-pressed={selected}
       onClick={onSelect}
@@ -72,7 +73,7 @@ export function StickerButton({
             ...gesture.original,
             x: gesture.original.x + delta.x / layer.clientWidth,
             y: gesture.original.y + delta.y / layer.clientHeight,
-          }),
+          }, layer.clientWidth),
         );
       }}
       onLostPointerCapture={(event) => {

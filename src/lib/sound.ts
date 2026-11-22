@@ -22,20 +22,25 @@ export function audioContext(): AudioContext | null {
     window.AudioContext ||
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AC) return null;
-  if (!ctx) ctx = new AC();
-  if (ctx.state === "suspended") void ctx.resume().catch(() => {});
+  try {
+    if (!ctx) ctx = new AC();
+  } catch {
+    return null;
+  }
   return ctx;
 }
 
 export function unlockAudio() {
-  audioContext();
+  const context = audioContext();
+  if (context?.state === "suspended") void context.resume().catch(() => {});
+  return context;
 }
 
 export type SoundName = "tap" | "yes" | "again" | "sparkle" | "grow";
 
 export function playSound(kind: SoundName) {
   if (muted) return;
-  const context = audioContext();
+  const context = unlockAudio();
   if (!context) return;
   const now = context.currentTime;
   const notes: Record<SoundName, number[]> = {

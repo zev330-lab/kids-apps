@@ -29,13 +29,13 @@ export function App() {
       <a className="skip" href="#main">
         Skip to play
       </a>
+      <UpdatePrompt />
       <main id="main">
         {route === "home" && <Home />}
         {route === "story" && <StoryApp />}
         {route === "scribble" && <ScribbleApp />}
         {route === "parker" && <ParkerApp />}
       </main>
-      <UpdatePrompt />
     </div>
   );
 }

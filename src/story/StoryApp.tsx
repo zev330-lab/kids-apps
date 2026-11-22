@@ -3,7 +3,8 @@ import { Picture, SpriteBadge } from "../art/Picture";
 import { TopBar } from "../components/TopBar";
 import { useSync } from "../components/useSync";
 import { playSound } from "../lib/sound";
-import { canSpeak, silence, speak } from "../lib/speech";
+import { canSpeak, localVoice, silence, speak } from "../lib/speech";
+import { RECORDED_NAMES } from "../lib/names";
 import { loadEndings, loadHero, rememberEnding, sanitizeName, saveHero, storageEvents } from "../lib/storage";
 import { fillName, sceneSpeech, type Scene, type World } from "./model";
 import { WORLDS, worldById } from "./worlds";
@@ -140,7 +141,11 @@ export function StoryApp() {
               <button
                 type="button"
                 className="btn btn-mint"
-                onClick={() => speak(sceneSpeech(scene, "our explorer"), 0.92)}
+                onClick={() => {
+                  const recorded = RECORDED_NAMES.find((name) => name.toLowerCase() === hero.toLowerCase());
+                  const spokenName = recorded ?? (localVoice() ? hero : "our explorer");
+                  void speak(sceneSpeech(scene, spokenName), 0.92);
+                }}
               >
                 Read to me
               </button>
