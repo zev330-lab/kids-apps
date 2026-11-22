@@ -11,6 +11,7 @@ import {
   type FaceLayout,
   type Stroke,
 } from "./geometry";
+import { STICKER_WIDTH } from "./stickerLayout";
 import { stickerSvg, type StickerKind } from "./stickers";
 
 export type DanceName = "wiggle" | "bounce" | "dance";
@@ -21,6 +22,7 @@ export type PlacedSticker = {
   x: number;
   y: number;
   rot: number;
+  scale: number;
 };
 
 export type FriendState = {
@@ -38,15 +40,13 @@ function loadSticker(kind: StickerKind): Promise<HTMLImageElement> {
   const cached = stickerCache.get(kind);
   if (cached) return cached;
   const promise = new Promise<HTMLImageElement>((resolve, reject) => {
-    const blob = new Blob([stickerSvg(kind)], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
+    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(stickerSvg(kind));
     const image = new Image();
     image.onload = () => {
-      URL.revokeObjectURL(url);
       resolve(image);
     };
     image.onerror = () => {
-      URL.revokeObjectURL(url);
+      stickerCache.delete(kind);
       reject(new Error("sticker"));
     };
     image.src = url;
@@ -87,6 +87,21 @@ function danceShift(dance: DanceName, t: number) {
   return { x: wave * 16, y: Math.sin(t * Math.PI * 4) * -16, rot: wave * 0.06 };
 }
 
+// Erasers cut holes in the ink layer only. Cache it for all frames of an export.
+const inkLayers = new WeakMap<Stroke[], HTMLCanvasElement>();
+function inkLayer(strokes: Stroke[]) {
+  const cached = inkLayers.get(strokes);
+  if (cached) return cached;
+  const layer = document.createElement("canvas");
+  layer.width = LOGICAL_W;
+  layer.height = LOGICAL_H;
+  const ctx = layer.getContext("2d");
+  if (!ctx) throw new Error("canvas");
+  drawStrokes(ctx, strokes);
+  inkLayers.set(strokes, layer);
+  return layer;
+}
+
 export async function drawFriend(
   ctx: CanvasRenderingContext2D,
   state: FriendState,
@@ -94,8 +109,12 @@ export async function drawFriend(
   width: number,
   height: number,
 ) {
+  const images = await Promise.all(state.stickers.map(s => loadSticker(s.kind)));
   ctx.clearRect(0, 0, width, height);
-  paintBackground(ctx, state.background, width, height);
+  ctx.save();
+  ctx.scale(width / LOGICAL_W, height / LOGICAL_H);
+  paintBackground(ctx, state.background, LOGICAL_W, LOGICAL_H);
+  ctx.restore();
   const scale = width / LOGICAL_W;
   const shift = danceShift(state.dance, t);
   ctx.save();
@@ -104,22 +123,17 @@ export async function drawFriend(
   ctx.translate(shift.x * scale, shift.y * scale);
   ctx.translate(-width / 2, -height * 0.82);
   ctx.scale(scale, scale);
-  drawStrokes(ctx, state.strokes);
+  ctx.drawImage(inkLayer(state.strokes), 0, 0);
   drawLimbs(ctx, state.layout, t);
   drawFace(ctx, state.layout, t);
-  for (const sticker of state.stickers) {
-    try {
-      const image = await loadSticker(sticker.kind);
-      const size = 120;
-      ctx.save();
-      ctx.translate(sticker.x * LOGICAL_W, sticker.y * LOGICAL_H);
-      ctx.rotate((sticker.rot * Math.PI) / 180);
-      ctx.drawImage(image, -size / 2, -size / 2, size, size);
-      ctx.restore();
-    } catch {
-      /* a sticker that fails to rasterize is skipped in the file */
-    }
-  }
+  state.stickers.forEach((sticker, index) => {
+    const size = LOGICAL_W * STICKER_WIDTH * sticker.scale;
+    ctx.save();
+    ctx.translate(sticker.x * LOGICAL_W, sticker.y * LOGICAL_H);
+    ctx.rotate((sticker.rot * Math.PI) / 180);
+    ctx.drawImage(images[index], -size / 2, -size / 2, size, size);
+    ctx.restore();
+  });
   ctx.restore();
   drawSparkles(ctx, width, height, t);
 }
@@ -237,36 +251,40 @@ export async function friendGif(state: FriendState): Promise<Blob> {
 
 export async function friendMovie(state: FriendState): Promise<Blob | null> {
   if (typeof MediaRecorder === "undefined" || !HTMLCanvasElement.prototype.captureStream) return null;
-  const types = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"];
+  const types = ["video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
   const mime = types.find((type) => MediaRecorder.isTypeSupported(type));
   if (!mime) return null;
   const canvas = document.createElement("canvas");
   canvas.width = 640;
   canvas.height = Math.round(640 * (LOGICAL_H / LOGICAL_W));
   const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  await drawFriend(ctx, state, 0, canvas.width, canvas.height);
   const stream = canvas.captureStream(12);
-  if (!ctx || !stream) return null;
-  const recorder = new MediaRecorder(stream, { mimeType: mime });
-  const chunks: Blob[] = [];
-  const done = new Promise<Blob>((resolve) => {
-    recorder.ondataavailable = (event) => {
-      if (event.data.size) chunks.push(event.data);
+  try {
+    const recorder = new MediaRecorder(stream, { mimeType: mime });
+    const chunks: Blob[] = [];
+    const done = new Promise<Blob>((resolve, reject) => {
+      recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+      recorder.onerror = () => reject(new Error("recording"));
+      recorder.onstop = () => resolve(new Blob(chunks, { type: mime }));
+    });
+    recorder.start();
+    const frames = async () => {
+      const started = performance.now();
+      while (recorder.state === "recording" && performance.now() - started < 2400) {
+        const now = await new Promise<number>(resolve => requestAnimationFrame(resolve));
+        await drawFriend(ctx, state, ((now - started) % 1000) / 1000, canvas.width, canvas.height);
+      }
+      if (recorder.state === "recording") recorder.stop();
     };
-    recorder.onstop = () => resolve(new Blob(chunks, { type: mime }));
-  });
-  recorder.start();
-  const started = performance.now();
-  await new Promise<void>((resolve) => {
-    const frame = async (now: number) => {
-      const t = ((now - started) % 1000) / 1000;
-      await drawFriend(ctx, state, t, canvas.width, canvas.height);
-      if (now - started < 2400) requestAnimationFrame((time) => void frame(time));
-      else resolve();
-    };
-    requestAnimationFrame((time) => void frame(time));
-  });
-  recorder.stop();
-  return done;
+    const [blob] = await Promise.all([done, frames()]);
+    return blob;
+  } catch {
+    return null; // Use the same artwork for the animated GIF fallback.
+  } finally {
+    stream.getTracks().forEach(track => track.stop());
+  }
 }
 
 export function downloadBlob(blob: Blob, filename: string) {
@@ -274,15 +292,21 @@ export function downloadBlob(blob: Blob, filename: string) {
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
+  document.body.append(link);
   link.click();
+  link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
 export async function shareOrSave(blob: Blob, filename: string, title: string) {
   const file = new File([blob], filename, { type: blob.type || "image/png" });
   if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title, text: "A friend I made in Playtime." });
-    return "shared" as const;
+    try {
+      await navigator.share({ files: [file], title, text: "A friend I made in Playtime." });
+      return "shared" as const;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") throw error;
+    }
   }
   downloadBlob(blob, filename);
   return "saved" as const;

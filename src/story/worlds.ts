@@ -22,6 +22,7 @@ const starlightScenes: Scene[] = [
     choices: [
       { label: "Climb into the rocket", to: "cockpit" },
       { label: "Visit the moonflower garden", to: "garden" },
+      { label: "Take the moon mail cart", to: "cart" },
     ],
   }),
   scene({
@@ -52,6 +53,7 @@ const starlightScenes: Scene[] = [
     choices: [
       { label: "Invite Moon Rabbit aboard", to: "rabbit" },
       { label: "Wave and launch", to: "cockpit" },
+      { label: "Follow the little mail bell", to: "cart" },
     ],
   }),
   scene({
@@ -333,6 +335,85 @@ const starlightScenes: Scene[] = [
       note: "Leaving a sign of friendship is a kind of map.",
     },
   }),
+  scene({
+    id: "cart",
+    title: "The Moon Mail Cart",
+    text: "Ting! Moon Rabbit's little cart rolled up with one square parcel and one very bumpy envelope. A star-shaped stamp tickled {{name}}'s thumb. “Will you take the first delivery?” asked Moon Rabbit.",
+    picture: pic("space", "moon", [
+      { s: "rabbit", x: 125, y: 165, anim: "bob" },
+      { s: "rocket", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Open the square parcel", to: "blanket" },
+      { label: "Feel the bumpy envelope", to: "buttons" },
+    ],
+  }),
+  scene({
+    id: "blanket",
+    title: "A Blanket with Pockets",
+    text: "Inside was a blanket with a pocket in each corner. One pocket held a note from the moon mice. “For friends who get chilly while they look at stars.” Moon Rabbit and {{name}} tried it for size.",
+    picture: pic("space", "moon", [
+      { s: "rabbit", x: 125, y: 165, anim: "bob" },
+      { s: "mouse", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Make a blanket fort", to: "end-fort" },
+      { label: "Pack a midnight picnic", to: "end-pockets" },
+    ],
+  }),
+  scene({
+    id: "buttons",
+    title: "The Button Map",
+    text: "Four shiny buttons fell into {{name}}'s lap. Moon Rabbit lined them up on the envelope. They made a map! A red button marked a crater. A gold one marked a little hill with a telescope.",
+    picture: pic("space", "moon", [
+      { s: "rabbit", x: 125, y: 165, anim: "bob" },
+      { s: "moon", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Look in the red crater", to: "end-postbox" },
+      { label: "Try the gold telescope", to: "end-telescope" },
+    ],
+  }),
+  scene({
+    id: "end-fort",
+    title: "Pocketful of Stars",
+    text: "Moon Rabbit tucked the blanket over two tall moonflowers. The mice crawled inside. {{name}} peeked through a pocket with a tiny hole. There was the whole sky, framed in blue stitches.",
+    picture: pic("space", "moon", [
+      { s: "rabbit", x: 125, y: 165, anim: "bob" },
+      { s: "flower", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "fort", title: "Pocketful of Stars", sticker: "flower", note: "A blanket made a little room for everyone." },
+  }),
+  scene({
+    id: "end-pockets",
+    title: "The Four-Pocket Picnic",
+    text: "One pocket for crumbs, one for cups, one for cookies, and one for Moon Rabbit's spoon. {{name}} spread the blanket. The mice took turns inventing shapes for the last cookie.",
+    picture: pic("space", "moon", [
+      { s: "rabbit", x: 125, y: 165, anim: "bob" },
+      { s: "cookie", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "pockets", title: "The Four-Pocket Picnic", sticker: "cookie", note: "The last cookie looked remarkably like a spoon." },
+  }),
+  scene({
+    id: "end-postbox",
+    title: "Crater Post",
+    text: "At the bottom of the crater sat an empty postbox. {{name}} drew a picture of home and slipped it inside. Ting! A mouse at the next crater waved a picture back.",
+    picture: pic("space", "moon", [
+      { s: "rabbit", x: 125, y: 165, anim: "bob" },
+      { s: "heart", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "postbox", title: "Crater Post", sticker: "heart", note: "Two drawings started a moon-mail friendship." },
+  }),
+  scene({
+    id: "end-telescope",
+    title: "A Peek at Home",
+    text: "{{name}} turned the telescope until a tiny blue dot came into focus. Moon Rabbit fetched a stool for the smallest mouse. They all took a peek at the blue place where the rocket trip began.",
+    picture: pic("space", "moon", [
+      { s: "rabbit", x: 125, y: 165, anim: "bob" },
+      { s: "moon", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "telescope", title: "A Peek at Home", sticker: "moon", note: "Even a tiny blue dot can feel like home." },
+  }),
 ];
 
 const forestScenes: Scene[] = [
@@ -348,7 +429,8 @@ const forestScenes: Scene[] = [
     ]),
     choices: [
       { label: "Take the lantern path", to: "lantern" },
-      { label: "Skip the mushroom path", to: "mushrooms" },
+      { label: "Skip along the mushroom path", to: "mushrooms" },
+      { label: "Follow the ripple in the moss", to: "ferry" },
     ],
   }),
   scene({
@@ -423,6 +505,7 @@ const forestScenes: Scene[] = [
     choices: [
       { label: "Plant the friendship seed", to: "end-tree" },
       { label: "Carry the seed to the brook", to: "stones" },
+      { label: "Ask Fox about the leaf ferry", to: "ferry" },
     ],
   }),
   scene({
@@ -579,6 +662,85 @@ const forestScenes: Scene[] = [
     ]),
     ending: { id: "crown", title: "Flower Crown", sticker: "flower", note: "Making something for a friend is its own kind of magic." },
   }),
+  scene({
+    id: "ferry",
+    title: "The Leaf Ferry",
+    text: "A leaf as wide as a dinner plate bumped the bank. Fox stood on it, using a twig for an oar. “My first ferry!” said Fox. A line of ants waited beside a basket of berries. {{name}} could help.",
+    picture: pic("meadow", "grass", [
+      { s: "fox", x: 125, y: 165, anim: "bob" },
+      { s: "leaf", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Invite the ants aboard", to: "passengers" },
+      { label: "Load the berry basket", to: "cargo" },
+    ],
+  }),
+  scene({
+    id: "passengers",
+    title: "Six Pairs of Boots",
+    text: "The ants wiped their tiny boots on a petal. Fox counted five passengers. {{name}} spotted one more under the leaf, giggling upside down! Where would the passengers like to stop?",
+    picture: pic("meadow", "grass", [
+      { s: "fox", x: 125, y: 165, anim: "bob" },
+      { s: "mushroom", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Dock at the mushroom steps", to: "end-boots" },
+      { label: "Float to the music tree", to: "end-drum" },
+    ],
+  }),
+  scene({
+    id: "cargo",
+    title: "Wobble, Wobble",
+    text: "The berry basket made the ferry lean. Fox scooted left. {{name}} scooted right. Now the leaf lay flat as a pancake. A bird chirped from one bank and Baby Owl waved from the other.",
+    picture: pic("meadow", "grass", [
+      { s: "fox", x: 125, y: 165, anim: "bob" },
+      { s: "owl", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Deliver berries to the bird", to: "end-paint" },
+      { label: "Bring a snack to Baby Owl", to: "end-toast" },
+    ],
+  }),
+  scene({
+    id: "end-boots",
+    title: "The Muddy Boot Shop",
+    text: "At the steps, {{name}} lined up six little leaves. Each ant slid its muddy boots onto a leaf to dry. Fox made a sign with a paw print. The forest's tiniest boot shop was open.",
+    picture: pic("meadow", "grass", [
+      { s: "fox", x: 125, y: 165, anim: "bob" },
+      { s: "leaf", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "boots", title: "The Muddy Boot Shop", sticker: "leaf", note: "Six little leaves made six very tidy doormats." },
+  }),
+  scene({
+    id: "end-drum",
+    title: "The Hollow Log Band",
+    text: "The ants drummed all their feet on a hollow log. Fox tapped the twig oar. {{name}} waited through a quiet beat, then clapped. A woodpecker high in the music tree answered the band.",
+    picture: pic("meadow", "grass", [
+      { s: "fox", x: 125, y: 165, anim: "bob" },
+      { s: "tree", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "drum", title: "The Hollow Log Band", sticker: "tree", note: "Even the quiet beat belonged in the song." },
+  }),
+  scene({
+    id: "end-paint",
+    title: "Berry Ink",
+    text: "The bird dipped a feather in berry juice and drew a wavy line. {{name}} added a leaf boat. Fox signed the picture with one purple paw. They hung their river map on a low branch.",
+    picture: pic("meadow", "grass", [
+      { s: "fox", x: 125, y: 165, anim: "bob" },
+      { s: "map", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "paint", title: "Berry Ink", sticker: "map", note: "A map in berry ink shows the way to the ferry." },
+  }),
+  scene({
+    id: "end-toast",
+    title: "Owl's Breakfast",
+    text: "Baby Owl had just woken up. {{name}} mashed the berries while Fox spread them on toast. Owl took a bite. A purple mustache appeared where a very small beak used to be.",
+    picture: pic("meadow", "grass", [
+      { s: "fox", x: 125, y: 165, anim: "bob" },
+      { s: "owl", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "toast", title: "Owl's Breakfast", sticker: "owl", note: "A sleepy breakfast ended in a purple giggle." },
+  }),
 ];
 
 const coralScenes: Scene[] = [
@@ -595,6 +757,7 @@ const coralScenes: Scene[] = [
     choices: [
       { label: "Board the bubble submarine", to: "sub" },
       { label: "Ride with Dot the dolphin", to: "dolphin" },
+      { label: "Answer the bubble bell", to: "bell" },
     ],
   }),
   scene({
@@ -654,6 +817,7 @@ const coralScenes: Scene[] = [
     choices: [
       { label: "Untangle the octopus gently", to: "pearl" },
       { label: "Follow a trail of bubbles", to: "turtle" },
+      { label: "Swim to the bubble bell", to: "bell" },
     ],
   }),
   scene({
@@ -833,9 +997,89 @@ const coralScenes: Scene[] = [
     ]),
     ending: { id: "reefshare", title: "Reef Share", sticker: "crab", note: "A shared slice can feed a whole reef of friends." },
   }),
+  scene({
+    id: "bell",
+    title: "The Bubble Bell",
+    text: "Plip, plop, PLOOP! Dot the dolphin nudged a ring of bubbles toward {{name}}. “It's an invitation,” said Dot. Inside the ring a tiny crab held up two signs. One showed a shell. One showed a wiggly tail.",
+    picture: pic("sea", "water", [
+      { s: "dolphin", x: 125, y: 165, anim: "bob" },
+      { s: "crab", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Follow the shell sign", to: "swap" },
+      { label: "Follow the wiggly tail", to: "lesson" },
+    ],
+  }),
+  scene({
+    id: "swap",
+    title: "The Shell Swap",
+    text: "The tiny crab set a striped shell beside a spotty shell. Dot listened at each opening. One whistled high, one hummed low. {{name}} could hear the difference even with eyes shut.",
+    picture: pic("sea", "water", [
+      { s: "dolphin", x: 125, y: 165, anim: "bob" },
+      { s: "shell", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Play a shell duet", to: "end-duet" },
+      { label: "Make a listening corner", to: "end-listen" },
+    ],
+  }),
+  scene({
+    id: "lesson",
+    title: "Tail School",
+    text: "Three baby fish were trying to swim in a circle. Their circles looked more like noodles. Dot drew a slow loop with one fin. “Noodles work too,” said {{name}}. The fish wiggled closer.",
+    picture: pic("sea", "water", [
+      { s: "dolphin", x: 125, y: 165, anim: "bob" },
+      { s: "fish", x: 270, y: 175, scale: 1.1 },
+    ]),
+    choices: [
+      { label: "Lead a noodle parade", to: "end-noodle" },
+      { label: "Build a hoop to swim through", to: "end-hoop" },
+    ],
+  }),
+  scene({
+    id: "end-duet",
+    title: "High Shell, Low Shell",
+    text: "The crab lifted a claw for high and pointed down for low. {{name}} and Dot blew their shells by turns. When the crab lifted both claws, the two notes made one sea-sized smile.",
+    picture: pic("sea", "water", [
+      { s: "dolphin", x: 125, y: 165, anim: "bob" },
+      { s: "shell", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "duet", title: "High Shell, Low Shell", sticker: "shell", note: "Two different notes fit in the same song." },
+  }),
+  scene({
+    id: "end-listen",
+    title: "The Listening Corner",
+    text: "{{name}} tucked the shells into soft sand. Dot showed a shy seahorse where to put an ear. Soon the little corner was full of friends taking turns listening to the whisper of the water.",
+    picture: pic("sea", "water", [
+      { s: "dolphin", x: 125, y: 165, anim: "bob" },
+      { s: "seahorse", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "listen", title: "The Listening Corner", sticker: "seahorse", note: "There was a quiet turn for every ear." },
+  }),
+  scene({
+    id: "end-noodle",
+    title: "Noodle Parade",
+    text: "{{name}} wiggled like a long noodle. The fish copied a short noodle, a curly noodle, and a noodle with a knot. Dot laughed so hard a bubble landed on the crab's nose.",
+    picture: pic("sea", "water", [
+      { s: "dolphin", x: 125, y: 165, anim: "bob" },
+      { s: "fish", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "noodle", title: "Noodle Parade", sticker: "fish", note: "Everybody's wiggle had a place in the parade." },
+  }),
+  scene({
+    id: "end-hoop",
+    title: "The Seaweed Hoop",
+    text: "Dot held one end of a soft ribbon of seaweed and {{name}} held the other. Each fish swam through the hoop in its own way. The tiniest fish went through backward, just for fun.",
+    picture: pic("sea", "water", [
+      { s: "dolphin", x: 125, y: 165, anim: "bob" },
+      { s: "dolphin", x: 270, y: 175, scale: 1.1 },
+    ]),
+    ending: { id: "hoop", title: "The Seaweed Hoop", sticker: "dolphin", note: "A soft hoop became a doorway to a new trick." },
+  }),
 ];
 
 function pack(id: string, title: string, blurb: string, start: string, scenes: Scene[]): World {
+  if (new Set(scenes.map(s => s.id)).size !== scenes.length) throw new Error(`Duplicate scene ID in ${id}`);
   return {
     id,
     title,

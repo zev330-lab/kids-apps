@@ -1,3 +1,4 @@
+import { lines } from "./lines";
 import type { ReactNode } from "react";
 import { Pip, type PipMood } from "../art/Pip";
 import { canSpeak, speak } from "../lib/speech";
@@ -60,7 +61,7 @@ export function PlayFrame({
           </button>
           <p className="kicker">{title}</p>
           <p className="prompt">{instruction}</p>
-          <HearButton text={hear ?? `${title}. ${instruction}`} rate={hearRate ?? 0.84} />
+          <HearButton text={hear ?? lines.intro(title, instruction)} rate={hearRate ?? 0.84} />
           <Grownup>{grownup}</Grownup>
         </div>
       </div>

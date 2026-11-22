@@ -1,0 +1,20 @@
+// Shared by the activities and the offline recording catalog.
+export const lines = {
+  intro: (title: string, instruction: string) => `${title}. ${instruction}`,
+  letter: (sound: string) => `Tap the letter that says ${sound}.`,
+  letterExample: (prompt: string, example: string) => `${prompt} ${example}`,
+  letterName: (letter: string) => "Letter " + letter.toUpperCase(),
+  sight: (word: string) => `Tap the word ${word}.`,
+  sightPraise: (praise: string, word: string) => `${praise} That word says ${word}.`,
+  sightMiss: (word: string) => `This word says ${word}.`,
+  sightHint: (word: string) => `The word is ${word}.`,
+  build: (word: string, stretch: string) => `${word}. ${stretch}. ${word}.`,
+  built: (word: string, stretch: string) => `Your try worked. ${word}. ${stretch}.`,
+  nextWord: (word: string) => `Now build ${word}.`,
+  count: (n: number) => "Let's count. " + Array.from({ length: n }, (_, i) => i + 1).join(", ") + ".",
+  add: (a: number, b: number) => `There are ${a} and ${b}. Count them all.`,
+  shape: (name: string) => `Tap the ${name}.`,
+  countMiss: "Let's count together. Touch each picture.",
+  addMiss: "Count every picture, starting at one.",
+  feelingDone: "You stayed for the feeling story. That is practice too.",
+};

@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { FRIEND_NAMES } from "../lib/names";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { speak } from "../lib/speech";
+import { StickerButton } from "./StickerButton";
+import { fitSticker, openSpot } from "./stickerLayout";
+import { NOTES } from "./notes";
 import { TopBar } from "../components/TopBar";
 import { playSound } from "../lib/sound";
-import { BACKGROUNDS, type BackgroundId } from "./backgrounds";
+import { paintBackground, BACKGROUNDS, type BackgroundId } from "./backgrounds";
 import { addFriend, deleteFriend, listFriends, type FriendRecord } from "./gallery";
 import {
   ERASER,
@@ -44,8 +49,6 @@ const BRUSHES = [
   { id: "jumbo", size: 52, label: "Jumbo" },
 ];
 
-const NAMES = ["Pip", "Bo", "Sunny", "Dot", "Momo", "Nib"];
-
 type Fit = { scale: number; x: number; y: number; dpr: number; cssW: number; cssH: number };
 
 export function ScribbleApp() {
@@ -54,7 +57,8 @@ export function ScribbleApp() {
   const fitRef = useRef<Fit>({ scale: 1, x: 0, y: 0, dpr: 1, cssW: 1, cssH: 1 });
   const strokesRef = useRef<Stroke[]>([]);
   const drawing = useRef<Stroke | null>(null);
-  const drag = useRef<{ id: string; pointer: number } | null>(null);
+  const history = useRef<{ strokes: Stroke[]; stickers: PlacedSticker[]; background: BackgroundId; alive: boolean }[]>([]);
+  const backdrop = useRef<HTMLCanvasElement>(null);
 
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [color, setColor] = useState(COLORS[4].value);
@@ -66,14 +70,37 @@ export function ScribbleApp() {
   const [stickers, setStickers] = useState<PlacedSticker[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [friendName, setFriendName] = useState("Friend");
-  const [note, setNote] = useState("Draw with your finger. Then tap Bring to life.");
+  const [note, setNote] = useState(NOTES.start);
   const [confirmClear, setConfirmClear] = useState(false);
   const [burst, setBurst] = useState(false);
   const [busy, setBusy] = useState("");
   const [gallery, setGallery] = useState(false);
   const [friends, setFriends] = useState<FriendRecord[]>([]);
-  const [preview, setPreview] = useState<string>("");
-  const measured = alive ? measureDrawing(strokes) : null;
+  const measured = useMemo(() => alive ? measureDrawing(strokes) : null, [alive, strokes]);
+  const preview = useMemo(() => {
+    if (!alive) return "";
+    const canvas = document.createElement("canvas");
+    canvas.width = LOGICAL_W;
+    canvas.height = LOGICAL_H;
+    const ctx = canvas.getContext("2d");
+    if (ctx) drawStrokes(ctx, strokes);
+    return canvas.toDataURL();
+  }, [alive, strokes]);
+
+  useEffect(() => {
+    const ctx = backdrop.current?.getContext("2d");
+    if (ctx) paintBackground(ctx, background, LOGICAL_W, LOGICAL_H);
+  }, [background, gallery]);
+
+  useEffect(() => { window.scrollTo(0, 0); }, [gallery]);
+  useEffect(() => {
+    if (alive && !gallery) stageRef.current?.scrollIntoView({ block: "nearest" });
+  }, [alive, gallery]);
+
+  function checkpoint() {
+    history.current.push({ strokes: strokesRef.current, stickers, background, alive });
+    if (history.current.length > 80) history.current.shift();
+  }
 
   useEffect(() => {
     strokesRef.current = strokes;
@@ -125,6 +152,8 @@ export function ScribbleApp() {
   }
 
   function pointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (!event.isPrimary) return;
+    checkpoint();
     event.currentTarget.setPointerCapture(event.pointerId);
     const point = toLogical(event);
     const stroke: Stroke = { color: eraser ? ERASER : color, size, points: [point] };
@@ -136,8 +165,9 @@ export function ScribbleApp() {
   }
 
   function pointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
-    if (!drawing.current) return;
-    const events = event.nativeEvent.getCoalescedEvents?.() ?? [event.nativeEvent];
+    if (!event.isPrimary || !drawing.current) return;
+    const batch = event.nativeEvent.getCoalescedEvents?.();
+    const events = batch?.length ? batch : [event.nativeEvent];
     for (const item of events) {
       const rect = event.currentTarget.getBoundingClientRect();
       const fit = fitRef.current;
@@ -149,75 +179,94 @@ export function ScribbleApp() {
     paint(strokesRef.current);
   }
 
-  function pointerUp() {
-    drawing.current = null;
+  function pointerUp(event: React.PointerEvent) {
+    if (event.isPrimary) drawing.current = null;
   }
 
   function undo() {
-    const next = strokesRef.current.slice(0, -1);
-    strokesRef.current = next;
-    setStrokes(next);
-    paint(next);
+    const previous = history.current.pop();
+    if (!previous) return;
+    strokesRef.current = previous.strokes;
+    setStrokes(previous.strokes);
+    setBackground(previous.background);
+    setStickers(previous.stickers);
+    setSelected(null);
+    setAlive(previous.alive);
+    paint(previous.strokes);
+    setNote(NOTES.undo);
     playSound("tap");
   }
 
   function clearAll() {
+    checkpoint();
+    setSelected(null);
+    setBackground("meadow");
     strokesRef.current = [];
     setStrokes([]);
     setStickers([]);
     setAlive(false);
     setConfirmClear(false);
     paint([]);
-    setNote("A fresh page. Draw anything.");
+    setNote(NOTES.clear);
   }
 
   function bringToLife() {
     if (!hasInk(strokesRef.current)) {
-      setNote("Draw something first. A squiggle is a great start.");
+      setNote(NOTES.needsInk);
       playSound("again");
       return;
     }
     const result = measureDrawing(strokesRef.current);
     if (!result) {
-      setNote("Try a darker color so your friend can show up.");
+      setNote(NOTES.erased);
       return;
     }
-    const canvas = document.createElement("canvas");
-    canvas.width = LOGICAL_W;
-    canvas.height = LOGICAL_H;
-    const ctx = canvas.getContext("2d");
-    if (ctx) drawStrokes(ctx, strokesRef.current);
-    setPreview(canvas.toDataURL("image/png"));
     setAlive(true);
     setDance("wiggle");
     setBurst(true);
-    setNote("Hello! Your scribble grew eyes.");
+    setNote(NOTES.alive);
     playSound("sparkle");
     window.setTimeout(() => setBurst(false), 1400);
   }
 
   function addSticker(kind: StickerKind) {
     if (stickers.length >= 8) {
-      setNote("This friend is wearing a lot. Peel one off to add another.");
+      setNote(NOTES.full);
       return;
     }
-    const spot = stickers.length;
+    checkpoint();
     const placed: PlacedSticker = {
       id: crypto.randomUUID(),
       kind,
-      x: 0.5 + ((spot % 5) - 2) * 0.08,
-      y: 0.18 + (spot % 3) * 0.05,
-      rot: (spot % 5) * 6 - 12,
+      ...openSpot(stickers),
+      scale: 1,
+      rot: 0,
     };
     setStickers((list) => [...list, placed]);
     setSelected(placed.id);
     playSound("tap");
   }
 
+  function transformSticker(scale: number, angle: number) {
+    checkpoint();
+    setStickers(list => list.map(s => s.id === selected
+      ? fitSticker({ ...s, scale: Math.max(0.65, Math.min(2, s.scale + scale)), rot: (s.rot + angle) % 360 }, stageRef.current?.clientWidth)
+      : s));
+  }
+
   function stateNow(): FriendState | null {
     const result = measureDrawing(strokes);
     if (!result) return null;
     return { strokes, background, stickers, dance, box: result.box, layout: result.layout };
+  }
+
+  async function keepInGallery(blob: Blob, savedNote: string, unavailableNote: string) {
+    try {
+      await addFriend({ id: crypto.randomUUID(), name: friendName || "Friend", created: Date.now(), blob });
+      setNote(savedNote);
+    } catch {
+      setNote(unavailableNote);
+    }
   }
 
   async function savePng() {
@@ -227,9 +276,10 @@ export function ScribbleApp() {
     try {
       const blob = await friendBlob(state, "image/png");
       downloadBlob(blob, `${fileBase()}.png`);
-      await addFriend({ id: crypto.randomUUID(), name: friendName || "Friend", created: Date.now(), blob });
-      setNote("Saved on this device, and in your gallery.");
+      await keepInGallery(blob, NOTES.saved, NOTES.downloadOnly);
       playSound("yes");
+    } catch {
+      setNote(NOTES.saveError);
     } finally {
       setBusy("");
     }
@@ -242,10 +292,10 @@ export function ScribbleApp() {
     try {
       const blob = await friendBlob(state, "image/png");
       const how = await shareOrSave(blob, `${fileBase()}.png`, friendName || "My scribble friend");
-      setNote(how === "shared" ? "Shared from this device." : "Saved the picture instead.");
-      await addFriend({ id: crypto.randomUUID(), name: friendName || "Friend", created: Date.now(), blob });
+      if (how === "shared") await keepInGallery(blob, NOTES.shared, NOTES.shareOnly);
+      else await keepInGallery(blob, NOTES.downloaded, NOTES.downloadOnly);
     } catch {
-      setNote("Sharing closed. Your drawing is still here.");
+      setNote(NOTES.shareClosed);
     } finally {
       setBusy("");
     }
@@ -260,15 +310,15 @@ export function ScribbleApp() {
       if (movie && movie.size > 0) {
         const ext = movie.type.includes("mp4") ? "mp4" : "webm";
         downloadBlob(movie, `${fileBase()}.${ext}`);
-        setNote("Movie saved. If it does not play, try the picture instead.");
+        setNote(NOTES.movie);
       } else {
         const gif = await friendGif(state);
         downloadBlob(gif, `${fileBase()}.gif`);
-        setNote("Saved a moving picture.");
+        setNote(NOTES.gif);
       }
       playSound("yes");
     } catch {
-      setNote("The movie did not finish. The picture save still works.");
+      setNote(NOTES.movieError);
       playSound("again");
     } finally {
       setBusy("");
@@ -281,8 +331,12 @@ export function ScribbleApp() {
   }
 
   async function openGallery() {
-    setFriends(await listFriends());
-    setGallery(true);
+    try {
+      setFriends(await listFriends());
+      setGallery(true);
+    } catch {
+      setNote(NOTES.galleryUnavailable);
+    }
   }
 
   if (gallery) {
@@ -331,6 +385,7 @@ export function ScribbleApp() {
                 aria-label={swatch.label}
                 aria-pressed={!eraser && color === swatch.value}
                 onClick={() => {
+                  setAlive(false);
                   setColor(swatch.value);
                   setEraser(false);
                 }}
@@ -342,7 +397,10 @@ export function ScribbleApp() {
               type="button"
               className={eraser ? "tool on" : "tool"}
               aria-pressed={eraser}
-              onClick={() => setEraser(true)}
+              onClick={() => {
+                setAlive(false);
+                setEraser(true);
+              }}
             >
               Eraser
             </button>
@@ -351,7 +409,9 @@ export function ScribbleApp() {
                 key={brush.id}
                 type="button"
                 className={!eraser && size === brush.size ? "tool on" : "tool"}
+                aria-pressed={!eraser && size === brush.size}
                 onClick={() => {
+                  setAlive(false);
                   setSize(brush.size);
                   setEraser(false);
                 }}
@@ -359,93 +419,97 @@ export function ScribbleApp() {
                 {brush.label}
               </button>
             ))}
-            <button type="button" className="tool" onClick={undo} disabled={!strokes.length}>
+            <button type="button" className="tool" onClick={undo} disabled={!history.current.length}>
               Undo
             </button>
-            <button type="button" className="tool" onClick={() => setConfirmClear(true)} disabled={!strokes.length}>
+            <button
+              type="button"
+              className="tool"
+              onClick={() => setConfirmClear(true)}
+              disabled={!strokes.length && !stickers.length && background === "meadow"}
+            >
               Clear
             </button>
           </div>
         </div>
 
         <div className="canvas-column">
-          <p className="status" role="status">
-            {busy || note}
-          </p>
-          {alive && measured ? (
-            <div ref={stageRef} className={`stage bg-${background}`}>
-              {burst && <Confetti />}
-              <div className={`dancer dance-${dance}`}>
-                <img src={preview} alt="" />
-                <svg className="limb-layer" viewBox={`0 0 ${LOGICAL_W} ${LOGICAL_H}`}>
-                  <Limb a={measured.layout.leftArm} b={{ x: measured.layout.leftArm.x - 54, y: measured.layout.leftArm.y + 46 }} w={measured.layout.limb} />
-                  <Limb a={measured.layout.rightArm} b={{ x: measured.layout.rightArm.x + 54, y: measured.layout.rightArm.y + 40 }} w={measured.layout.limb} />
-                  <Limb a={measured.layout.leftLeg} b={{ x: measured.layout.leftLeg.x - 8, y: measured.layout.leftLeg.y + 78 }} w={measured.layout.limb} />
-                  <Limb a={measured.layout.rightLeg} b={{ x: measured.layout.rightLeg.x + 12, y: measured.layout.rightLeg.y + 78 }} w={measured.layout.limb} />
-                  <path
-                    d={`M ${measured.layout.mouth.x - measured.layout.mouth.w / 2} ${measured.layout.mouth.y} Q ${measured.layout.mouth.x} ${measured.layout.mouth.y + measured.layout.eyeR} ${measured.layout.mouth.x + measured.layout.mouth.w / 2} ${measured.layout.mouth.y}`}
-                    fill="none"
-                    stroke="#243056"
-                    strokeWidth={Math.max(4, measured.layout.eyeR * 0.22)}
-                    strokeLinecap="round"
+          <div className="stage-note">
+            <p className="status" role="status">
+              {busy || note}
+            </p>
+            <button type="button" className="tool" onClick={() => speak(note)} aria-label="Hear drawing note">
+              Hear it
+            </button>
+          </div>
+          <div className="stage" ref={stageRef}>
+            <div className="stage-art" data-background={background}>
+              <canvas className="backdrop" ref={backdrop} width={LOGICAL_W} height={LOGICAL_H} aria-hidden="true" />
+              {burst && alive && <Confetti />}
+              <div className={alive ? `dancer dance-${dance}` : "artwork"}>
+                {alive && measured ? (
+                  <>
+                    <img src={preview} alt="" />
+                    <svg className="limb-layer" viewBox={`0 0 ${LOGICAL_W} ${LOGICAL_H}`}>
+                      <Limb
+                        a={measured.layout.leftArm}
+                        b={{ x: measured.layout.leftArm.x - 54, y: measured.layout.leftArm.y + 46 }}
+                        w={measured.layout.limb}
+                      />
+                      <Limb
+                        a={measured.layout.rightArm}
+                        b={{ x: measured.layout.rightArm.x + 54, y: measured.layout.rightArm.y + 40 }}
+                        w={measured.layout.limb}
+                      />
+                      <Limb
+                        a={measured.layout.leftLeg}
+                        b={{ x: measured.layout.leftLeg.x - 8, y: measured.layout.leftLeg.y + 78 }}
+                        w={measured.layout.limb}
+                      />
+                      <Limb
+                        a={measured.layout.rightLeg}
+                        b={{ x: measured.layout.rightLeg.x + 12, y: measured.layout.rightLeg.y + 78 }}
+                        w={measured.layout.limb}
+                      />
+                      <path
+                        d={`M ${measured.layout.mouth.x - measured.layout.mouth.w / 2} ${measured.layout.mouth.y} Q ${measured.layout.mouth.x} ${measured.layout.mouth.y + measured.layout.eyeR} ${measured.layout.mouth.x + measured.layout.mouth.w / 2} ${measured.layout.mouth.y}`}
+                        fill="none"
+                        stroke="#243056"
+                        strokeWidth={Math.max(4, measured.layout.eyeR * 0.22)}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="eye" style={eyeStyle(measured.layout.leftEye, measured.layout.eyeR)}>
+                      <i />
+                    </span>
+                    <span className="eye" style={eyeStyle(measured.layout.rightEye, measured.layout.eyeR)}>
+                      <i />
+                    </span>
+                  </>
+                ) : (
+                  <canvas
+                    className="ink"
+                    ref={canvasRef}
+                    aria-label="Drawing canvas"
+                    onPointerDown={pointerDown}
+                    onPointerMove={pointerMove}
+                    onPointerUp={pointerUp}
+                    onPointerCancel={pointerUp}
                   />
-                </svg>
-                <span
-                  className="eye"
-                  style={eyeStyle(measured.layout.leftEye, measured.layout.eyeR)}
-                >
-                  <i />
-                </span>
-                <span
-                  className="eye"
-                  style={eyeStyle(measured.layout.rightEye, measured.layout.eyeR)}
-                >
-                  <i />
-                </span>
+                )}
                 {stickers.map((sticker) => (
-                  <button
+                  <StickerButton
                     key={sticker.id}
-                    type="button"
-                    className={selected === sticker.id ? "placed on" : "placed"}
-                    style={{
-                      left: `${sticker.x * 100}%`,
-                      top: `${sticker.y * 100}%`,
-                      transform: `translate(-50%, -50%) rotate(${sticker.rot}deg)`,
-                    }}
-                    aria-label={STICKER_LABELS[sticker.kind]}
-                    onPointerDown={(event) => {
-                      event.stopPropagation();
-                      event.currentTarget.setPointerCapture(event.pointerId);
-                      drag.current = { id: sticker.id, pointer: event.pointerId };
-                      setSelected(sticker.id);
-                    }}
-                    onPointerMove={(event) => {
-                      if (drag.current?.pointer !== event.pointerId || !stageRef.current) return;
-                      const rect = stageRef.current.getBoundingClientRect();
-                      const x = Math.max(0.08, Math.min(0.92, (event.clientX - rect.left) / rect.width));
-                      const y = Math.max(0.08, Math.min(0.92, (event.clientY - rect.top) / rect.height));
-                      setStickers((list) => list.map((item) => (item.id === sticker.id ? { ...item, x, y } : item)));
-                    }}
-                    onPointerUp={() => {
-                      drag.current = null;
-                    }}
-                    dangerouslySetInnerHTML={{ __html: stickerSvg(sticker.kind) }}
+                    sticker={sticker}
+                    selected={selected === sticker.id}
+                    onSelect={() => setSelected(sticker.id)}
+                    checkpoint={checkpoint}
+                    onMove={(placed) => setStickers((list) => list.map((s) => (s.id === placed.id ? placed : s)))}
                   />
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="canvas-wrap">
-              <canvas
-                ref={canvasRef}
-                aria-label="Drawing canvas"
-                onPointerDown={pointerDown}
-                onPointerMove={pointerMove}
-                onPointerUp={pointerUp}
-                onPointerCancel={pointerUp}
-              />
-            </div>
-          )}
+          </div>
         </div>
 
         <aside className="sticker-dock" aria-label="Stickers and backgrounds">
@@ -457,7 +521,10 @@ export function ScribbleApp() {
                 type="button"
                 className={background === item.id ? `bg-swatch bg-${item.id} on` : `bg-swatch bg-${item.id}`}
                 aria-pressed={background === item.id}
-                onClick={() => setBackground(item.id)}
+                onClick={() => {
+                  if (item.id !== background) checkpoint();
+                  setBackground(item.id);
+                }}
               >
                 <span>{item.label}</span>
               </button>
@@ -466,23 +533,45 @@ export function ScribbleApp() {
           <div className="dock-label">Stickers</div>
           <div className="sticker-row">
             {STICKER_KINDS.map((kind) => (
-              <button key={kind} type="button" className="sticker-btn" onClick={() => addSticker(kind)} disabled={!alive}>
+              <button key={kind} type="button" className="sticker-btn" onClick={() => addSticker(kind)}>
                 <span dangerouslySetInnerHTML={{ __html: stickerSvg(kind) }} />
                 <em>{STICKER_LABELS[kind]}</em>
               </button>
             ))}
           </div>
           {selected && (
-            <button
-              type="button"
-              className="tool"
-              onClick={() => {
-                setStickers((list) => list.filter((item) => item.id !== selected));
-                setSelected(null);
-              }}
-            >
-              Peel off
-            </button>
+            <div className="sticker-controls">
+              <button
+                type="button"
+                className="tool"
+                onClick={() => transformSticker(-0.2, 0)}
+                disabled={(stickers.find((s) => s.id === selected)?.scale ?? 1) <= 0.65}
+              >
+                Smaller
+              </button>
+              <button
+                type="button"
+                className="tool"
+                onClick={() => transformSticker(0.2, 0)}
+                disabled={(stickers.find((s) => s.id === selected)?.scale ?? 1) >= 2}
+              >
+                Bigger
+              </button>
+              <button type="button" className="tool" onClick={() => transformSticker(0, 30)}>
+                Turn
+              </button>
+              <button
+                type="button"
+                className="tool"
+                onClick={() => {
+                  checkpoint();
+                  setStickers((list) => list.filter((item) => item.id !== selected));
+                  setSelected(null);
+                }}
+              >
+                Peel off
+              </button>
+            </div>
           )}
         </aside>
       </div>
@@ -499,6 +588,7 @@ export function ScribbleApp() {
                 key={mode}
                 type="button"
                 className={dance === mode ? "btn btn-mint on" : "btn btn-mint"}
+                aria-pressed={dance === mode}
                 onClick={() => setDance(mode)}
               >
                 {mode === "wiggle" ? "Wiggle" : mode === "bounce" ? "Bounce" : "Dance"}
@@ -509,7 +599,7 @@ export function ScribbleApp() {
               <input value={friendName} maxLength={16} onChange={(event) => setFriendName(event.target.value)} />
             </label>
             <div className="name-chips">
-              {NAMES.map((name) => (
+              {FRIEND_NAMES.map((name) => (
                 <button key={name} type="button" className="chip" onClick={() => setFriendName(name)}>
                   {name}
                 </button>
@@ -529,7 +619,7 @@ export function ScribbleApp() {
               className="btn btn-ghost"
               onClick={() => {
                 setAlive(false);
-                setNote("Add more marks, then bring your friend back.");
+                setNote(NOTES.drawMore);
               }}
             >
               Draw more
@@ -592,9 +682,10 @@ function Confetti() {
   );
 }
 
-function GalleryCard({ friend, onDelete }: { friend: FriendRecord; onDelete: () => void }) {
+function GalleryCard({ friend, onDelete }: { friend: FriendRecord; onDelete: () => Promise<void> }) {
   const [url, setUrl] = useState("");
   const [confirm, setConfirm] = useState(false);
+  const [cardNote, setCardNote] = useState("");
   useEffect(() => {
     const next = URL.createObjectURL(friend.blob);
     setUrl(next);
@@ -604,6 +695,7 @@ function GalleryCard({ friend, onDelete }: { friend: FriendRecord; onDelete: () 
     <article className="gallery-card">
       {url && <img src={url} alt="" />}
       <h3>{friend.name}</h3>
+      {cardNote && <p role="status">{cardNote}</p>}
       <div className="row-actions">
         <button
           type="button"
@@ -615,7 +707,14 @@ function GalleryCard({ friend, onDelete }: { friend: FriendRecord; onDelete: () 
         <button
           type="button"
           className="btn"
-          onClick={() => void shareOrSave(friend.blob, `${friend.name || "friend"}.png`, friend.name)}
+          onClick={async () => {
+            try {
+              const how = await shareOrSave(friend.blob, `${friend.name || "friend"}.png`, friend.name);
+              setCardNote(how === "shared" ? NOTES.shared : NOTES.downloaded);
+            } catch {
+              setCardNote(NOTES.shareClosed);
+            }
+          }}
         >
           Share
         </button>
@@ -624,7 +723,10 @@ function GalleryCard({ friend, onDelete }: { friend: FriendRecord; onDelete: () 
             Let go
           </button>
         ) : (
-          <button type="button" className="btn btn-ghost" onClick={onDelete}>
+          <button type="button" className="btn btn-ghost" onClick={() => onDelete().catch(() => {
+            setConfirm(false);
+            setCardNote("The gallery needs a moment. Try again soon.");
+          })}>
             Yes, let go
           </button>
         )}

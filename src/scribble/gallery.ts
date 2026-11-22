@@ -1,4 +1,5 @@
 const DB_NAME = "playtime-scribbles";
+const BYTE_DB = "playtime-scribbles-bytes";
 const STORE = "friends";
 
 export type FriendRecord = {
@@ -8,9 +9,14 @@ export type FriendRecord = {
   blob: Blob;
 };
 
-function openDb(): Promise<IDBDatabase> {
+type StoredFriend = FriendRecord | (Omit<FriendRecord, "blob"> & {
+  bytes: ArrayBuffer;
+  mimeType: string;
+});
+
+function openDb(name: string): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+    const request = indexedDB.open(name, 1);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "id" });
@@ -20,36 +26,52 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-export async function addFriend(record: FriendRecord) {
-  const db = await openDb();
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE, "readwrite");
-    tx.objectStore(STORE).put(record);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
+function transact<T>(db: IDBDatabase, mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>) {
+  return new Promise<T>((resolve, reject) => {
+    const tx = db.transaction(STORE, mode);
+    const request = run(tx.objectStore(STORE));
+    tx.oncomplete = () => resolve(request.result);
+    tx.onabort = () => reject(tx.error ?? request.error);
   });
-  db.close();
+}
+
+async function galleryRequest<T>(database: string, mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>) {
+  const db = await openDb(database);
+  try {
+    return await transact(db, mode, run);
+  } finally {
+    db.close();
+  }
+}
+
+export async function addFriend({ blob, ...friend }: FriendRecord) {
+  const db = await openDb(DB_NAME);
+  try {
+    await transact(db, "readwrite", (store) => store.put({ ...friend, blob }));
+    return;
+  } catch {
+    // Some engines reject Blob cloning at put or transaction commit.
+    // Keep the byte-only retry out of reach of v1 readers.
+  } finally {
+    db.close();
+  }
+  const row = { ...friend, bytes: await blob.arrayBuffer(), mimeType: blob.type };
+  await galleryRequest(BYTE_DB, "readwrite", (store) => store.put(row));
 }
 
 export async function listFriends(): Promise<FriendRecord[]> {
-  const db = await openDb();
-  const rows = await new Promise<FriendRecord[]>((resolve, reject) => {
-    const tx = db.transaction(STORE, "readonly");
-    const request = tx.objectStore(STORE).getAll();
-    request.onsuccess = () => resolve(request.result as FriendRecord[]);
-    request.onerror = () => reject(request.error);
+  const groups = await Promise.allSettled([DB_NAME, BYTE_DB].map((db) =>
+    galleryRequest<StoredFriend[]>(db, "readonly", (store) => store.getAll()),
+  ));
+  if (groups.every(group => group.status === "rejected")) throw groups[0].reason;
+  const rows = groups.flatMap(group => group.status === "fulfilled" ? group.value : []);
+  return rows.sort((a, b) => b.created - a.created).slice(0, 30).map((row) => {
+    if ("blob" in row) return row;
+    const { bytes, mimeType, ...friend } = row;
+    return { ...friend, blob: new Blob([bytes], { type: mimeType }) };
   });
-  db.close();
-  return rows.sort((a, b) => b.created - a.created).slice(0, 30);
 }
 
 export async function deleteFriend(id: string) {
-  const db = await openDb();
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE, "readwrite");
-    tx.objectStore(STORE).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-  db.close();
+  await Promise.all([DB_NAME, BYTE_DB].map((db) => galleryRequest(db, "readwrite", (store) => store.delete(id))));
 }

@@ -53,3 +53,24 @@ describe("gif encoder", () => {
     expect(String.fromCharCode(...bytes.slice(0, 6))).toBe("GIF89a");
   });
 });
+
+describe("sticker placement", () => {
+  it("sets eight distinct spots and reuses the gap after peeling", async () => {
+    const { openSpot } = await import("../src/scribble/stickerLayout");
+    const placed: { x: number; y: number }[] = [];
+    for (let i = 0; i < 8; i++) {
+      const next = openSpot(placed);
+      for (const other of placed) expect(Math.hypot(next.x - other.x, next.y - other.y)).toBeGreaterThan(0.25);
+      placed.push(next);
+    }
+    placed.splice(3, 1);
+    expect(placed).not.toContainEqual(openSpot(placed));
+  });
+
+  it("keeps a large rotated sticker inside the picture", async () => {
+    const { fitSticker } = await import("../src/scribble/stickerLayout");
+    const sticker = fitSticker({ id: "hat", kind: "crown", x: 0, y: 1, rot: 45, scale: 2 });
+    expect(sticker.x).toBeCloseTo(0.16 * Math.SQRT2);
+    expect(sticker.y).toBeCloseTo(1 - sticker.x * 10 / 7);
+  });
+});

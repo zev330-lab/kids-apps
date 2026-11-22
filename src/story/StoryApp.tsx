@@ -3,12 +3,14 @@ import { Picture, SpriteBadge } from "../art/Picture";
 import { TopBar } from "../components/TopBar";
 import { useSync } from "../components/useSync";
 import { playSound } from "../lib/sound";
-import { canSpeak, silence, speak } from "../lib/speech";
+import { canSpeak, localVoice, silence, speak } from "../lib/speech";
+import { RECORDED_NAMES } from "../lib/names";
 import { loadEndings, loadHero, rememberEnding, sanitizeName, saveHero, storageEvents } from "../lib/storage";
 import { fillName, sceneSpeech, type Scene, type World } from "./model";
 import { WORLDS, worldById } from "./worlds";
 
 export function StoryApp() {
+  const [draftName, setDraftName] = useState<string | null>(null);
   const [worldId, setWorldId] = useState<string | null>(null);
   const [sceneId, setSceneId] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>([]);
@@ -30,7 +32,7 @@ export function StoryApp() {
     if (!already) playSound("grow");
   }, [world, scene]);
 
-  useEffect(() => () => silence(), []);
+  useEffect(() => () => silence(), [sceneId, book]);
 
   if (book) {
     return (
@@ -51,12 +53,18 @@ export function StoryApp() {
           <label className="name-field">
             <span>The hero's name</span>
             <input
-              value={hero}
+              value={draftName ?? hero}
               maxLength={16}
               autoCapitalize="words"
               autoComplete="off"
-              onChange={(event) => saveHero(event.target.value)}
-              onBlur={(event) => saveHero(sanitizeName(event.target.value))}
+              onChange={(event) => {
+                setDraftName(event.target.value);
+                saveHero(event.target.value);
+              }}
+              onBlur={(event) => {
+                saveHero(sanitizeName(event.target.value));
+                setDraftName(null);
+              }}
             />
           </label>
           <div className="world-grid">
@@ -133,7 +141,11 @@ export function StoryApp() {
               <button
                 type="button"
                 className="btn btn-mint"
-                onClick={() => speak(sceneSpeech(scene, hero), 0.92)}
+                onClick={() => {
+                  const recorded = RECORDED_NAMES.find((name) => name.toLowerCase() === hero.toLowerCase());
+                  const spokenName = recorded ?? (localVoice() ? hero : "our explorer");
+                  void speak(sceneSpeech(scene, spokenName), 0.92);
+                }}
               >
                 Read to me
               </button>

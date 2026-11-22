@@ -4,6 +4,8 @@ import { MuteButton } from "./TopBar";
 import { go } from "../lib/route";
 import { playSound } from "../lib/sound";
 
+declare const __PLAYTIME_BUILD__: string;
+
 const covers = {
   story: {
     sky: "space" as const,
@@ -103,6 +105,7 @@ export function Home() {
           Sound and read-aloud use this device only, and the quiet button turns both off.
         </p>
       </details>
+      <footer className="build-stamp">Playtime 4 · {__PLAYTIME_BUILD__}</footer>
     </div>
   );
 }
