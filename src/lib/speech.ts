@@ -1,7 +1,10 @@
 import files from "./voice-manifest.json";
-import { audioContext, isMuted } from "./sound";
+import { audioContext, isMuted, needsResume } from "./sound";
+import { LETTERS } from "../parker/content";
 
 const clips: Record<string, string> = files;
+const soundCues = new Map(LETTERS.map(({ sound, keyword }) => [sound, `the first sound in ${keyword}`]));
+soundCues.set("/ks/", "the last two sounds in fox");
 let generation = 0;
 let current: AudioBufferSourceNode | undefined;
 let finish: (() => void) | undefined;
@@ -36,7 +39,8 @@ export function localVoice() {
 function fallback(text: string, rate: number) {
   const local = localVoice();
   if (!local) return Promise.resolve();
-  const utterance = new SpeechSynthesisUtterance(text);
+  const spoken = text.replace(/\/[\p{L}\p{M}]+\//gu, (sound) => soundCues.get(sound) ?? "that sound");
+  const utterance = new SpeechSynthesisUtterance(spoken);
   utterance.lang = "en-US";
   utterance.rate = rate;
   utterance.voice = local;
@@ -65,7 +69,7 @@ async function playClip(text: string, rate: number, ticket: number) {
   try {
     const context = audioContext();
     if (!context) throw new Error("Web Audio is unavailable");
-    if (context.state === "suspended") await context.resume();
+    if (needsResume(context.state)) await context.resume();
     if (controller.signal.aborted) return;
     if (context.state !== "running") throw new Error("Audio is unavailable");
     const response = await fetch(new URL(import.meta.env.BASE_URL + clips[text], document.baseURI), {

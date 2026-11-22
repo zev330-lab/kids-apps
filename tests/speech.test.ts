@@ -1,8 +1,13 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { speak, silence } from "../src/lib/speech";
 import { audioContext, isMuted } from "../src/lib/sound";
+import { LETTERS } from "../src/parker/content";
 
-vi.mock("../src/lib/sound", () => ({ audioContext: vi.fn(), isMuted: vi.fn() }));
+vi.mock("../src/lib/sound", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../src/lib/sound")>(),
+  audioContext: vi.fn(),
+  isMuted: vi.fn(),
+}));
 const source = () => ({
   start: vi.fn(),
   stop: vi.fn(),
@@ -47,6 +52,39 @@ beforeEach(() => {
 afterEach(() => {
   silence();
   vi.unstubAllGlobals();
+});
+
+it("resumes an interrupted context during the tap and plays the recording", async () => {
+  const ctx = audioContext()!;
+  const resume = vi.fn(async () => { Object.assign(ctx, { state: "running" }); });
+  Object.assign(ctx, { state: "interrupted", resume });
+  const reading = speak("Letter B");
+  expect(resume).toHaveBeenCalledOnce();
+  await vi.waitFor(() => expect(sources[0]?.start).toHaveBeenCalledOnce());
+  sources[0].onended!();
+  await reading;
+  expect(synthesize).not.toHaveBeenCalled();
+});
+
+it("uses the local voice if resume leaves the context interrupted", async () => {
+  Object.assign(audioContext()!, { state: "interrupted", resume: vi.fn().mockResolvedValue(undefined) });
+  await speak("Letter B");
+  expect(fetchClip).not.toHaveBeenCalled();
+  expect(synthesize).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ text: "Letter B" }));
+});
+
+it.each(LETTERS)("speaks a keyword cue when the $sound recording fails", async ({ sound, keyword }) => {
+  fetchClip.mockRejectedValueOnce(new Error("offline"));
+  await speak(sound);
+  expect(fetchClip).toHaveBeenCalledOnce();
+  expect(synthesize).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ text: `the first sound in ${keyword}` }));
+});
+
+it("translates embedded and unfamiliar phoneme notation before system speech", async () => {
+  await speak("Listen for /ĕ/, /ks/, and /sh/.");
+  expect(synthesize).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    text: "Listen for the first sound in egg, the last two sounds in fox, and that sound.",
+  }));
 });
 
 it("cancels a playing clip and its queued prompt when another button speaks", async () => {

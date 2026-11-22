@@ -30,18 +30,29 @@ export function audioContext(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() {
+export function needsResume(state: AudioContextState) {
+  return state === "suspended" || state === "interrupted";
+}
+
+export async function unlockAudio() {
   const context = audioContext();
-  if (context?.state === "suspended") void context.resume().catch(() => {});
-  return context;
+  if (!context) return null;
+  if (needsResume(context.state)) {
+    try {
+      await context.resume();
+    } catch {
+      return null;
+    }
+  }
+  return context.state === "running" ? context : null;
 }
 
 export type SoundName = "tap" | "yes" | "again" | "sparkle" | "grow";
 
-export function playSound(kind: SoundName) {
+export async function playSound(kind: SoundName) {
   if (muted) return;
-  const context = unlockAudio();
-  if (!context) return;
+  const context = await unlockAudio();
+  if (!context || muted) return;
   const now = context.currentTime;
   const notes: Record<SoundName, number[]> = {
     tap: [494],

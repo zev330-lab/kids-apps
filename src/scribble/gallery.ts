@@ -60,10 +60,11 @@ export async function addFriend({ blob, ...friend }: FriendRecord) {
 }
 
 export async function listFriends(): Promise<FriendRecord[]> {
-  const groups = await Promise.all([DB_NAME, BYTE_DB].map((db) =>
+  const groups = await Promise.allSettled([DB_NAME, BYTE_DB].map((db) =>
     galleryRequest<StoredFriend[]>(db, "readonly", (store) => store.getAll()),
   ));
-  const rows = groups.flat();
+  if (groups.every(group => group.status === "rejected")) throw groups[0].reason;
+  const rows = groups.flatMap(group => group.status === "fulfilled" ? group.value : []);
   return rows.sort((a, b) => b.created - a.created).slice(0, 30).map((row) => {
     if ("blob" in row) return row;
     const { bytes, mimeType, ...friend } = row;
