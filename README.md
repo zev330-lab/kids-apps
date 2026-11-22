@@ -2,11 +2,11 @@
 
 Three gentle apps for a phone, a tablet, or an iPad in Split View. The look is an original blocky game style: chunky characters, dark panels, and pressable buttons. Nothing leaves the device. There are no accounts, no ads, and no third-party requests.
 
-- **Story Builder** is a choose-your-own-adventure with three worlds (Starlight Voyage, Whisperwood, and Coral Crown). Each world has more than ten scenes and at least four endings. Pictures are drawn in the app. A sticker book remembers endings in this browser, and the hero can be named. “Read to me” uses the device’s own speech.
-- **Scribble Friends** turns a finger drawing into a character with eyes, a mouth, arms, and legs. Kids can wiggle, bounce, or dance it, then add stickers and backgrounds. Save a PNG, share it with the device share sheet when that exists, or save a short movie (WebM/MP4 when the browser can record, otherwise a GIF). A gallery stays on the device.
+- **Story Builder** is a choose-your-own-adventure with three worlds (Starlight Voyage, Whisperwood, and Coral Crown). The worlds have 79 scenes and 34 endings in all. Pictures are drawn in the app. A sticker book remembers endings in this browser, and the hero can be named. “Read to me” plays a local recording. The recording calls the named hero “our explorer.”
+- **Scribble Friends** turns a finger drawing into a character with eyes, a mouth, arms, and legs. Kids can add backgrounds and stickers while drawing or dancing. Tap a sticker to select it, drag it, change its size, turn it, or peel it off. Undo also restores decoration changes. Save a PNG, share it with the device share sheet when that exists, or save a short movie (WebM/MP4 when the browser can record, otherwise a GIF). A gallery stays on the device.
 - **Parker** is for Parker, age 6, to use beside a grown-up. Letter sounds, sight words, CVC words (cat, sun, map, and more), tiny books, counting to 20, adding within 10, and shapes. Nothing is timed. A miss says “let’s try again” and can offer a hint. A garden counts tries and practice, not points. Pip’s “Wiggly tummy” story says that trying matters more than being good at it, and that a wiggly tummy or a warm face can be what learning feels like.
 
-Sound effects are synthesized on the device. The Quiet/Sound button turns off effects and speech together.
+Narration uses bundled mono AAC recordings by Kokoro’s af_heart voice at speed 0.9. Letter names and sounds have separate recordings. Sound effects are synthesized on the device. The Quiet/Sound button turns off effects and speech together.
 
 ## Run it
 
@@ -24,9 +24,13 @@ npm run preview
 
 `npm test` checks the story maps, the scribble measurements, Parker’s word and math rounds, and that the Parker screens do not use shame language.
 
+`npm run test:e2e` builds the app and exercises the production preview in fresh headless phone and tablet contexts. Chromium and FFmpeg are required. WebKit projects are included when its executable is installed.
+
+`npm run voice` extracts narration from the content and renders changed clips. It uses FFmpeg on PATH and the local Kokoro Python environment, ONNX model and voice bank under `~/dev/kokoro`. Override their locations with `KOKORO_PYTHON` and `KOKORO_DIR`. Ordinary builds use the existing files in `public/voice`.
+
 ## Add to the home screen
 
-The build is a PWA. In Safari or Chrome, use Share or the browser menu and choose **Add to Home Screen**. After the first visit, the app is cached and works offline.
+The build is a PWA. In Safari or Chrome, use Share or the browser menu and choose **Add to Home Screen**. After installation finishes, the app and narration work offline. Playtime checks for updates on launch, when it becomes visible and hourly while open. Finish or save the current activity, then tap the refresh prompt. The Home footer shows the installed build. Devices upgrading from the older automatic worker pick up the new Home screen on their next navigation or relaunch.
 
 ## Deploy for free
 

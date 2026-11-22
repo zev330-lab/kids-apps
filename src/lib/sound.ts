@@ -14,29 +14,28 @@ export function isMuted() {
 export function setMuted(next: boolean) {
   muted = next;
   saveMuted(next);
-  if (next && typeof window !== "undefined") window.speechSynthesis?.cancel();
 }
 
-function audio(): AudioContext | null {
+export function audioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
   const AC =
     window.AudioContext ||
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AC) return null;
   if (!ctx) ctx = new AC();
-  if (ctx.state === "suspended") void ctx.resume();
+  if (ctx.state === "suspended") void ctx.resume().catch(() => {});
   return ctx;
 }
 
 export function unlockAudio() {
-  audio();
+  audioContext();
 }
 
 export type SoundName = "tap" | "yes" | "again" | "sparkle" | "grow";
 
 export function playSound(kind: SoundName) {
   if (muted) return;
-  const context = audio();
+  const context = audioContext();
   if (!context) return;
   const now = context.currentTime;
   const notes: Record<SoundName, number[]> = {

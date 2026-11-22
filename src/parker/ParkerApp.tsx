@@ -1,3 +1,4 @@
+import { lines } from "./lines";
 import { useState } from "react";
 import { Pip } from "../art/Pip";
 import { TopBar } from "../components/TopBar";
@@ -24,7 +25,7 @@ export function ParkerApp() {
   function open(id: ActivityId) {
     const meta = ACTIVITIES.find((item) => item.id === id);
     setActivity(id);
-    if (meta) speak(`${meta.title}. ${meta.intro}`, 0.84);
+    if (meta) speak(lines.intro(meta.title, meta.intro), 0.84);
   }
 
   function rest() {

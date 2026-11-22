@@ -1,3 +1,4 @@
+import { lines } from "./lines";
 import { useEffect, useState } from "react";
 import { Sprite } from "../art/sprites";
 import { playSound } from "../lib/sound";
@@ -33,12 +34,12 @@ function LetterRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => v
   const quiz = useQuiz(round.length);
   if (quiz.done) return <RoundDone line={quiz.line} onAgain={onAgain} onRest={onRest} />;
   const item = round[quiz.index];
-  const speech = `Tap the letter that says ${item.answer.sound}.`;
+  const speech = lines.letter(item.answer.sound);
   return (
     <PlayFrame
       title="Letter sounds"
       instruction={speech}
-      hear={`${speech} ${item.answer.say}`}
+      hear={lines.letterExample(speech, item.answer.say)}
       grownup="Say the sound with Parker, then let them tap. A hint is a kind of help, not a shortcut to hide."
       mood={quiz.note ? "think" : "happy"}
       onBack={onRest}
@@ -49,6 +50,8 @@ function LetterRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => v
             <Sprite name={item.answer.sprite} />
           </svg>
           <p>{item.answer.hint}</p>
+          <button type="button" className="btn" onClick={() => speak(lines.letterName(item.answer.letter))}>Letter name</button>
+          <button type="button" className="btn" onClick={() => speak(item.answer.sound)}>Letter sound</button>
         </div>
       )}
       <div className="choice-row">
@@ -60,7 +63,7 @@ function LetterRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => v
             onClick={() => {
               if (option.letter === item.answer.letter) {
                 const upcoming = round[quiz.index + 1];
-                quiz.succeed(yesLine(quiz.index), upcoming ? `Tap the letter that says ${upcoming.answer.sound}.` : undefined);
+                quiz.succeed(yesLine(quiz.index), upcoming ? lines.letter(upcoming.answer.sound) : undefined);
               } else quiz.miss(item.answer.hint);
             }}
           >
@@ -86,7 +89,7 @@ function SightRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
   const quiz = useQuiz(round.length);
   if (quiz.done) return <RoundDone line={quiz.line} onAgain={onAgain} onRest={onRest} />;
   const item = round[quiz.index];
-  const speech = `Tap the word ${item.answer}.`;
+  const speech = lines.sight(item.answer);
   return (
     <PlayFrame
       title="Sight words"
@@ -105,8 +108,8 @@ function SightRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
             onClick={() => {
               if (word === item.answer) {
                 const upcoming = round[quiz.index + 1];
-                quiz.succeed(`${yesLine(quiz.index)} That word says ${item.answer}.`, upcoming ? `Tap the word ${upcoming.answer}.` : undefined);
-              } else quiz.miss(`This word says ${item.answer}.`);
+                quiz.succeed(lines.sightPraise(yesLine(quiz.index), item.answer), upcoming ? lines.sight(upcoming.answer) : undefined);
+              } else quiz.miss(lines.sightMiss(item.answer));
             }}
           >
             {word}
@@ -114,7 +117,7 @@ function SightRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
         ))}
       </div>
       <GentleNote text={quiz.note} />
-      <button type="button" className="btn btn-ghost" onClick={() => quiz.askHint(`The word is ${item.answer}.`)}>
+      <button type="button" className="btn btn-ghost" onClick={() => quiz.askHint(lines.sightHint(item.answer))}>
         Give me a hint
       </button>
     </PlayFrame>
@@ -143,7 +146,7 @@ function BuildRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
     <PlayFrame
       title="Build a word"
       instruction="Make the word for this picture."
-      hear={`${item.word}. ${item.stretch}. ${item.word}.`}
+      hear={lines.build(item.word, item.stretch)}
       grownup={`Stretch it out loud. ${item.word}. ${item.stretch}.`}
       mood={shake ? "think" : "happy"}
       onBack={onRest}
@@ -180,8 +183,8 @@ function BuildRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
               if (next.join("") === item.word) {
                 const upcoming = round[quiz.index + 1];
                 quiz.succeed(
-                  `Your try worked. ${item.word}. ${item.stretch}.`,
-                  upcoming ? `Now build ${upcoming.word}.` : undefined,
+                  lines.built(item.word, item.stretch),
+                  upcoming ? lines.nextWord(upcoming.word) : undefined,
                 );
               } else {
                 bumpTries();
@@ -266,7 +269,6 @@ function CountRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
   const quiz = useQuiz(round.length);
   if (quiz.done) return <RoundDone line={quiz.line} onAgain={onAgain} onRest={onRest} />;
   const item = round[quiz.index];
-  const counting = Array.from({ length: item.n }, (_, index) => index + 1).join(", ");
   return (
     <PlayFrame
       title="Count"
@@ -294,7 +296,7 @@ function CountRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
               if (number === item.n) {
                 const upcoming = round[quiz.index + 1];
                 quiz.succeed(yesLine(quiz.index), upcoming ? "How many do you see?" : undefined);
-              } else quiz.miss("Let's count together. Touch each picture.");
+              } else quiz.miss(lines.countMiss);
             }}
           >
             {number}
@@ -302,7 +304,7 @@ function CountRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
         ))}
       </div>
       <GentleNote text={quiz.note} />
-      <button type="button" className="btn btn-ghost" onClick={() => quiz.askHint(`Let's count. ${counting}.`)}>
+      <button type="button" className="btn btn-ghost" onClick={() => quiz.askHint(lines.count(item.n))}>
         Count with me
       </button>
     </PlayFrame>
@@ -356,7 +358,7 @@ function AddRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => void
             className={quiz.showHint && number === item.sum ? "letter-btn glow" : "letter-btn"}
             onClick={() => {
               if (number === item.sum) quiz.succeed(yesLine(quiz.index), round[quiz.index + 1] ? "How many altogether?" : undefined);
-              else quiz.miss("Count every picture, starting at one.");
+              else quiz.miss(lines.addMiss);
             }}
           >
             {number}
@@ -367,7 +369,7 @@ function AddRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => void
       <button
         type="button"
         className="btn btn-ghost"
-        onClick={() => quiz.askHint(`There are ${item.a} and ${item.b}. Count them all.`)}
+        onClick={() => quiz.askHint(lines.add(item.a, item.b))}
       >
         Give me a hint
       </button>
@@ -385,7 +387,7 @@ function ShapeRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
   const quiz = useQuiz(round.length);
   if (quiz.done) return <RoundDone line={quiz.line} onAgain={onAgain} onRest={onRest} />;
   const item = round[quiz.index];
-  const speech = `Tap the ${item.answer.name}.`;
+  const speech = lines.shape(item.answer.name);
   return (
     <PlayFrame
       title="Shapes"
@@ -405,7 +407,7 @@ function ShapeRound({ onAgain, onRest }: { onAgain: () => void; onRest: () => vo
             onClick={() => {
               if (shape.id === item.answer.id) {
                 const upcoming = round[quiz.index + 1];
-                quiz.succeed(yesLine(quiz.index), upcoming ? `Tap the ${upcoming.answer.name}.` : undefined);
+                quiz.succeed(yesLine(quiz.index), upcoming ? lines.shape(upcoming.answer.name) : undefined);
               } else quiz.miss(item.answer.hint);
             }}
           >
@@ -428,7 +430,7 @@ export function FeelingActivity({ onRest }: { onRest: () => void }) {
   if (done) {
     return (
       <RoundDone
-        line="You stayed for the feeling story. That is practice too."
+        line={lines.feelingDone}
         onAgain={() => {
           setBeat(0);
           setDone(false);
@@ -448,7 +450,7 @@ export function FeelingActivity({ onRest }: { onRest: () => void }) {
             setDone(true);
             bumpPractice();
             playSound("grow");
-            speak("You stayed for the feeling story. That is practice too.", 0.88);
+            speak(lines.feelingDone, 0.88);
           } else {
             const next = beat + 1;
             setBeat(next);

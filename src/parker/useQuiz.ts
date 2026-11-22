@@ -14,12 +14,9 @@ export function useQuiz(length: number) {
   const [line, setLine] = useState(PRACTICE_LINES[0]);
   const timer = useRef<number | null>(null);
 
-  useEffect(
-    () => () => {
-      if (timer.current) window.clearTimeout(timer.current);
-    },
-    [],
-  );
+  useEffect(() => () => {
+    if (timer.current) window.clearTimeout(timer.current);
+  }, []);
 
   function miss(hint: string) {
     if (lock || done) return;
@@ -39,22 +36,20 @@ export function useQuiz(length: number) {
     playSound("yes");
     setNote(message);
     setLock(true);
-    speak(message, 0.9);
+    const practiceLine = PRACTICE_LINES[length % PRACTICE_LINES.length];
+    void speak(message, 0.9, index + 1 >= length ? practiceLine : nextSpeech);
     timer.current = window.setTimeout(() => {
       setNote(null);
       setShowHint(false);
       setMisses(0);
       setLock(false);
       if (index + 1 >= length) {
-        const practiceLine = PRACTICE_LINES[length % PRACTICE_LINES.length];
         setLine(practiceLine);
         setDone(true);
         bumpPractice();
         playSound("grow");
-        speak(practiceLine, 0.88);
       } else {
         setIndex((value) => value + 1);
-        if (nextSpeech) speak(nextSpeech, 0.84);
       }
     }, 850);
   }

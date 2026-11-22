@@ -345,7 +345,7 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   .choice { min-height: 48px; }
 }
 
-.scribble-app { height: 100vh; height: 100dvh; overflow: hidden; }
+.scribble-app > .topbar { position: relative; flex: none; }
 .scribble-body {
   flex: 1;
   min-height: 0;
@@ -355,24 +355,23 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   padding: 8px var(--space) 0;
 }
 .canvas-column { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
-.canvas-wrap, .stage {
-  flex: 1;
-  min-height: 180px;
+.canvas-column, .tool-dock, .sticker-dock { min-width: 0; }
+.stage {
+  width: 100%;
+  align-self: center;
   border-radius: var(--radius);
-  position: relative;
   overflow: hidden;
   border: 4px solid #1c3358;
-  box-shadow: 0 8px 0 #1c3358;
-  background: #e7eef8;
+  box-shadow: 0 5px 0 #1c3358;
 }
-.canvas-wrap canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
-  display: block;
-}
+.stage-art { position: relative; aspect-ratio: 10 / 7; }
+.artwork { position: absolute; inset: 0; }
+.stage-art canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.stage-note { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.stage-art .ink, .placed { touch-action: none; }
+.placed { user-select: none; -webkit-touch-callout: none; }
+.placed svg { pointer-events: none; }
+.sticker-controls { display: flex; flex-wrap: wrap; gap: 8px; }
 .tool-dock { display: flex; flex-direction: column; gap: 8px; flex: none; }
 .color-row, .utility-row, .sticker-row, .bg-row {
   display: flex;
@@ -432,13 +431,6 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
 .bg-sunset { background: linear-gradient(#ff7a3c, #5a1848); color: #1a1408; }
 .bg-candy { background: linear-gradient(#ff4d9a, #3a1460); color: #fff; }
 .bg-cozy { background: linear-gradient(#f0b429, #8a3a12); color: #1a1408; }
-.stage { background: #e7eef8; }
-.stage.bg-meadow { background: linear-gradient(#3ec6ff, #147a34); }
-.stage.bg-ocean { background: linear-gradient(#1aa7d4, #07283d); }
-.stage.bg-space { background: linear-gradient(#2a1868, #0c1020); }
-.stage.bg-sunset { background: linear-gradient(#ff7a3c, #5a1848); }
-.stage.bg-candy { background: linear-gradient(#ff4d9a, #3a1460); }
-.stage.bg-cozy { background: linear-gradient(#f0b429, #8a3a12); }
 .dancer { position: absolute; inset: 0; transform-origin: 50% 82%; }
 .dancer img { width: 100%; height: 100%; object-fit: contain; }
 .limb-layer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -463,9 +455,8 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
 }
 .placed {
   position: absolute;
-  width: 18%;
-  min-width: 64px;
-  max-width: 120px;
+  border: 0;
+  border-radius: 8px;
   background: transparent;
   box-shadow: none;
   padding: 0;
@@ -519,7 +510,8 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   .scribble-body {
     display: grid;
     grid-template-columns: 132px minmax(0, 1fr) minmax(180px, 220px);
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    flex: none;
     gap: 12px;
     padding-inline: 16px;
   }
@@ -538,22 +530,25 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   }
   .swatch { width: 100%; min-width: 0; min-height: 52px; }
   .canvas-column { grid-column: 2; grid-row: 1; }
-  .sticker-dock { grid-column: 3; grid-row: 1; overflow: auto; min-height: 0; }
+  .sticker-dock { grid-column: 3; grid-row: 1; overflow: auto; min-height: 0; max-height: max(45vh, 320px); }
   .sticker-row, .bg-row { flex-direction: column; overflow: visible; }
   .sticker-btn { width: 100%; }
-  .canvas-wrap, .stage { min-height: 0; }
+
   .action-bar .btn { min-height: 64px; }
 }
 
 @media (max-width: 799px) {
-  .scribble-app { height: auto; min-height: 100dvh; overflow: visible; }
-  .canvas-wrap, .stage { min-height: 46vh; min-height: 46dvh; }
+  .scribble-body { flex: none; gap: 14px; }
+  .canvas-column { order: -1; flex: none; }
+  .tool-dock .color-row, .tool-dock .utility-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 6px;
+  }
+  .swatch { flex: none; }
+  .scribble-app > .topbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .scribble-app > .topbar h1 { grid-column: 1 / -1; order: -1; }
 }
-@media (max-height: 520px) {
-  .scribble-app { height: auto; min-height: 100dvh; overflow: visible; }
-  .canvas-wrap, .stage { min-height: 240px; }
-}
-
 .pill {
   background: #f0b429;
   color: #1a1408;
@@ -800,3 +795,7 @@ h2, h3, .prompt, .home-title, .card-copy strong, .act-card strong {
   .act-card strong { font-size: 1.6rem; }
   .act-card { padding: 16px; }
 }
+
+.build-stamp { margin-top: 16px; font-size: 0.8rem; }
+.update-prompt { position: fixed; z-index: 25; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: max-content; max-width: 95vw; }
+.hint-art { flex-wrap: wrap; }

@@ -25,24 +25,24 @@ export type Letter = {
 };
 
 export const LETTERS: Letter[] = [
-  { letter: "a", sound: "ah", say: "ah, like apple", hint: "A says ah, like apple.", keyword: "apple", sprite: "apple" },
-  { letter: "b", sound: "buh", say: "buh, like ball", hint: "B says buh, like ball.", keyword: "ball", sprite: "ball" },
-  { letter: "c", sound: "kuh", say: "kuh, like cat", hint: "C says kuh, like cat.", keyword: "cat", sprite: "cat" },
-  { letter: "d", sound: "duh", say: "duh, like dog", hint: "D says duh, like dog.", keyword: "dog", sprite: "dog" },
-  { letter: "e", sound: "eh", say: "eh, like egg", hint: "E says eh, like egg.", keyword: "egg", sprite: "egg" },
-  { letter: "f", sound: "fff", say: "fff, like fish", hint: "F says fff, like fish.", keyword: "fish", sprite: "fish" },
-  { letter: "g", sound: "guh", say: "guh, like goat", hint: "G says guh, like goat.", keyword: "goat", sprite: "goat" },
-  { letter: "h", sound: "hhh", say: "hhh, like hat", hint: "H says hhh, like hat.", keyword: "hat", sprite: "hat" },
-  { letter: "i", sound: "ih", say: "ih, like igloo", hint: "I says ih, like igloo.", keyword: "igloo", sprite: "igloo" },
-  { letter: "l", sound: "lll", say: "lll, like leaf", hint: "L says lll, like leaf.", keyword: "leaf", sprite: "leaf" },
-  { letter: "m", sound: "mmm", say: "mmm, like moon", hint: "M says mmm, like moon.", keyword: "moon", sprite: "moon" },
-  { letter: "n", sound: "nnn", say: "nnn, like nest", hint: "N says nnn, like nest.", keyword: "nest", sprite: "nest" },
-  { letter: "o", sound: "oh", say: "oh, like octopus", hint: "O says oh, like octopus.", keyword: "octopus", sprite: "octopus" },
-  { letter: "p", sound: "puh", say: "puh, like pig", hint: "P says puh, like pig.", keyword: "pig", sprite: "pig" },
-  { letter: "r", sound: "rrr", say: "rrr, like rain", hint: "R says rrr, like rain.", keyword: "rain", sprite: "rain" },
-  { letter: "s", sound: "sss", say: "sss, like sun", hint: "S says sss, like sun.", keyword: "sun", sprite: "sun" },
-  { letter: "t", sound: "tuh", say: "tuh, like top", hint: "T says tuh, like top.", keyword: "top", sprite: "top" },
-  { letter: "u", sound: "uh", say: "uh, like umbrella", hint: "U says uh, like umbrella.", keyword: "umbrella", sprite: "umbrella" },
+  { letter: "a", sound: "/ă/", say: "/ă/, like apple", hint: "A says /ă/, like apple.", keyword: "apple", sprite: "apple" },
+  { letter: "b", sound: "/b/", say: "/b/, like ball", hint: "B says /b/, like ball.", keyword: "ball", sprite: "ball" },
+  { letter: "c", sound: "/k/", say: "/k/, like cat", hint: "C says /k/, like cat.", keyword: "cat", sprite: "cat" },
+  { letter: "d", sound: "/d/", say: "/d/, like dog", hint: "D says /d/, like dog.", keyword: "dog", sprite: "dog" },
+  { letter: "e", sound: "/ĕ/", say: "/ĕ/, like egg", hint: "E says /ĕ/, like egg.", keyword: "egg", sprite: "egg" },
+  { letter: "f", sound: "/f/", say: "/f/, like fish", hint: "F says /f/, like fish.", keyword: "fish", sprite: "fish" },
+  { letter: "g", sound: "/g/", say: "/g/, like goat", hint: "G says /g/, like goat.", keyword: "goat", sprite: "goat" },
+  { letter: "h", sound: "/h/", say: "/h/, like hat", hint: "H says /h/, like hat.", keyword: "hat", sprite: "hat" },
+  { letter: "i", sound: "/ĭ/", say: "/ĭ/, like igloo", hint: "I says /ĭ/, like igloo.", keyword: "igloo", sprite: "igloo" },
+  { letter: "l", sound: "/l/", say: "/l/, like leaf", hint: "L says /l/, like leaf.", keyword: "leaf", sprite: "leaf" },
+  { letter: "m", sound: "/m/", say: "/m/, like moon", hint: "M says /m/, like moon.", keyword: "moon", sprite: "moon" },
+  { letter: "n", sound: "/n/", say: "/n/, like nest", hint: "N says /n/, like nest.", keyword: "nest", sprite: "nest" },
+  { letter: "o", sound: "/ŏ/", say: "/ŏ/, like octopus", hint: "O says /ŏ/, like octopus.", keyword: "octopus", sprite: "octopus" },
+  { letter: "p", sound: "/p/", say: "/p/, like pig", hint: "P says /p/, like pig.", keyword: "pig", sprite: "pig" },
+  { letter: "r", sound: "/r/", say: "/r/, like rain", hint: "R says /r/, like rain.", keyword: "rain", sprite: "rain" },
+  { letter: "s", sound: "/s/", say: "/s/, like sun", hint: "S says /s/, like sun.", keyword: "sun", sprite: "sun" },
+  { letter: "t", sound: "/t/", say: "/t/, like top", hint: "T says /t/, like top.", keyword: "top", sprite: "top" },
+  { letter: "u", sound: "/ŭ/", say: "/ŭ/, like umbrella", hint: "U says /ŭ/, like umbrella.", keyword: "umbrella", sprite: "umbrella" },
 ];
 
 export const SIGHT_WORDS = [
@@ -76,18 +76,18 @@ export type CvcWord = {
 };
 
 export const CVC_WORDS: CvcWord[] = [
-  { word: "cat", sprite: "cat", stretch: "cuh, ah, t", hint: "Cat starts with cuh." },
-  { word: "sun", sprite: "sun", stretch: "sss, uh, n", hint: "Sun starts with sss." },
-  { word: "map", sprite: "map", stretch: "mmm, ah, p", hint: "Map starts with mmm." },
-  { word: "dog", sprite: "dog", stretch: "duh, oh, g", hint: "Dog starts with duh." },
-  { word: "pig", sprite: "pig", stretch: "puh, ih, g", hint: "Pig starts with puh." },
-  { word: "hat", sprite: "hat", stretch: "hhh, ah, t", hint: "Hat starts with hhh." },
-  { word: "bug", sprite: "bug", stretch: "buh, uh, g", hint: "Bug starts with buh." },
-  { word: "bed", sprite: "bed", stretch: "buh, eh, d", hint: "Bed starts with buh." },
-  { word: "cup", sprite: "cup", stretch: "kuh, uh, p", hint: "Cup starts with kuh." },
-  { word: "fox", sprite: "fox", stretch: "fff, oh, ks", hint: "Fox starts with fff." },
-  { word: "hen", sprite: "hen", stretch: "hhh, eh, n", hint: "Hen starts with hhh." },
-  { word: "pot", sprite: "pot", stretch: "puh, oh, t", hint: "Pot starts with puh." },
+  { word: "cat", sprite: "cat", stretch: "/k/, /ă/, /t/", hint: "Cat starts with /k/." },
+  { word: "sun", sprite: "sun", stretch: "/s/, /ŭ/, /n/", hint: "Sun starts with /s/." },
+  { word: "map", sprite: "map", stretch: "/m/, /ă/, /p/", hint: "Map starts with /m/." },
+  { word: "dog", sprite: "dog", stretch: "/d/, /ŏ/, /g/", hint: "Dog starts with /d/." },
+  { word: "pig", sprite: "pig", stretch: "/p/, /ĭ/, /g/", hint: "Pig starts with /p/." },
+  { word: "hat", sprite: "hat", stretch: "/h/, /ă/, /t/", hint: "Hat starts with /h/." },
+  { word: "bug", sprite: "bug", stretch: "/b/, /ŭ/, /g/", hint: "Bug starts with /b/." },
+  { word: "bed", sprite: "bed", stretch: "/b/, /ĕ/, /d/", hint: "Bed starts with /b/." },
+  { word: "cup", sprite: "cup", stretch: "/k/, /ŭ/, /p/", hint: "Cup starts with /k/." },
+  { word: "fox", sprite: "fox", stretch: "/f/, /ŏ/, /ks/", hint: "Fox starts with /f/." },
+  { word: "hen", sprite: "hen", stretch: "/h/, /ĕ/, /n/", hint: "Hen starts with /h/." },
+  { word: "pot", sprite: "pot", stretch: "/p/, /ŏ/, /t/", hint: "Pot starts with /p/." },
 ];
 
 export const BOOKS = [
@@ -257,7 +257,7 @@ export const ACTIVITIES = [
     id: "letters",
     title: "Letter sounds",
     blurb: "Hear a sound. Tap its letter.",
-    grownup: "Say the sound with Parker. Stretch it. Ah, buh, kuh.",
+    grownup: "Say the first sound together. Keep the sound in ball short.",
     intro: "Tap the letter that makes the sound.",
   },
   {
@@ -271,7 +271,7 @@ export const ACTIVITIES = [
     id: "build",
     title: "Build a word",
     blurb: "Make cat, sun, map, and friends.",
-    grownup: "Stretch the word out loud. Cat. Cuh, ah, t.",
+    grownup: "Say each sound in cat, then blend the sounds together.",
     intro: "Tap the letters in order.",
   },
   {

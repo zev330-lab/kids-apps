@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { UpdatePrompt } from "./components/UpdatePrompt";
 import { Home } from "./components/Home";
 import { parseHash, type RouteName } from "./lib/route";
 import { silence } from "./lib/speech";
@@ -20,6 +21,7 @@ export function App() {
   const route = useRoute();
   useEffect(() => {
     silence();
+    window.scrollTo(0, 0);
   }, [route]);
 
   return (
@@ -33,6 +35,7 @@ export function App() {
         {route === "scribble" && <ScribbleApp />}
         {route === "parker" && <ParkerApp />}
       </main>
+      <UpdatePrompt />
     </div>
   );
 }

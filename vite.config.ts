@@ -8,11 +8,13 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
+    define: { __PLAYTIME_BUILD__: JSON.stringify(new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC") },
     plugins: [
       react(),
       VitePWA({
-        registerType: "autoUpdate",
-        includeAssets: ["favicon.svg", "icons/*.png"],
+        registerType: "prompt",
+        injectRegister: false,
+        includeManifestIcons: false, // Already covered by the PNG precache glob.
         manifest: {
           name: "Playtime",
           short_name: "Playtime",
@@ -47,7 +49,11 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ["**/*.{js,css,html,svg,png,ico,woff,woff2,webmanifest}"],
+          importScripts: ["./upgrade-legacy.js"],
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: false,
+          globPatterns: ["**/*.{js,css,html,svg,png,ico,woff,woff2,m4a}"],
           navigateFallback: "index.html",
           // Hash routes do not need the server. Ignore the dev-only vite client.
           navigateFallbackDenylist: [/^\/api/],
